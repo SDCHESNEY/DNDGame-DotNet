@@ -15,6 +15,7 @@ public class Session
     public DateTime? LastActivityAt { get; set; }
     
     // Navigation properties
+    public List<SessionParticipant> Participants { get; set; } = [];
     public List<Message> Messages { get; set; } = [];
     public List<DiceRoll> DiceRolls { get; set; } = [];
 }

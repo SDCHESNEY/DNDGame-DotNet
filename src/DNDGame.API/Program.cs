@@ -10,7 +10,16 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<DndGameContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    if (builder.Environment.IsDevelopment())
+    {
+        options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+    else
+    {
+        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
+    }
+});
 
 // Register repositories
 builder.Services.AddScoped<ICharacterRepository, CharacterRepository>();
@@ -19,6 +28,9 @@ builder.Services.AddScoped<ISessionRepository, SessionRepository>();
 // Register application services
 builder.Services.AddScoped<ICharacterService, CharacterService>();
 builder.Services.AddScoped<ISessionService, SessionService>();
+builder.Services.AddSingleton<IDiceRoller, DiceRollerService>();
+builder.Services.AddScoped<IRulesEngine, RulesEngineService>();
+builder.Services.AddScoped<ICombatService, CombatService>();
 
 // Register validators
 builder.Services.AddValidatorsFromAssemblyContaining<CreateCharacterRequestValidator>();

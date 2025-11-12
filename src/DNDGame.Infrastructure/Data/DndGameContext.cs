@@ -16,6 +16,8 @@ public class DndGameContext : DbContext
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<Message> Messages => Set<Message>();
     public DbSet<DiceRoll> DiceRolls => Set<DiceRoll>();
+    public DbSet<Condition> Conditions => Set<Condition>();
+    public DbSet<SessionParticipant> SessionParticipants => Set<SessionParticipant>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

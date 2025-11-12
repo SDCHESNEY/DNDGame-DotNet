@@ -26,8 +26,7 @@ public class SessionConfiguration : IEntityTypeConfiguration<Session>
             .HasMaxLength(2000);
 
         builder.Property(s => s.WorldFlags)
-            .IsRequired()
-            .HasColumnType("nvarchar(max)");
+            .IsRequired();
 
         builder.Property(s => s.CreatedAt)
             .IsRequired();

@@ -3,7 +3,6 @@ using System;
 using DNDGame.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
@@ -12,65 +11,59 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DNDGame.Infrastructure.Migrations
 {
     [DbContext(typeof(DndGameContext))]
-    [Migration("20251111142235_InitialCreate")]
+    [Migration("20251112122201_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
-
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
             modelBuilder.Entity("DNDGame.Core.Entities.Character", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("ArmorClass")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Class")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("HitPoints")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Inventory")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Level")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<int>("MaxHitPoints")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PersonalityTraits")
                         .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("PlayerId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Skills")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -81,43 +74,81 @@ namespace DNDGame.Infrastructure.Migrations
                     b.ToTable("Characters");
                 });
 
+            modelBuilder.Entity("DNDGame.Core.Entities.Condition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Duration")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("SaveDC")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Source")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppliedAt")
+                        .HasDatabaseName("IX_Conditions_AppliedAt");
+
+                    b.HasIndex("CharacterId")
+                        .HasDatabaseName("IX_Conditions_CharacterId");
+
+                    b.HasIndex("Type")
+                        .HasDatabaseName("IX_Conditions_Type");
+
+                    b.ToTable("Conditions");
+                });
+
             modelBuilder.Entity("DNDGame.Core.Entities.DiceRoll", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Formula")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("IndividualRolls")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Modifier")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("RollerId")
                         .IsRequired()
                         .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SessionId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("Total")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Type")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -132,28 +163,26 @@ namespace DNDGame.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("AuthorId")
                         .IsRequired()
                         .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Role")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int>("SessionId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -168,22 +197,20 @@ namespace DNDGame.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -196,39 +223,37 @@ namespace DNDGame.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("CurrentScene")
                         .HasMaxLength(2000)
-                        .HasColumnType("nvarchar(2000)");
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("CurrentTurnCharacterId")
-                        .HasColumnType("int");
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime?>("LastActivityAt")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Mode")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("State")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("WorldFlags")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -237,6 +262,39 @@ namespace DNDGame.Infrastructure.Migrations
                     b.HasIndex("State");
 
                     b.ToTable("Sessions");
+                });
+
+            modelBuilder.Entity("DNDGame.Core.Entities.SessionParticipant", b =>
+                {
+                    b.Property<int>("SessionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
+                    b.Property<DateTime>("JoinedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("SessionId", "CharacterId");
+
+                    b.HasIndex("CharacterId")
+                        .HasDatabaseName("IX_SessionParticipants_CharacterId");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_SessionParticipants_IsActive");
+
+                    b.HasIndex("SessionId")
+                        .HasDatabaseName("IX_SessionParticipants_SessionId");
+
+                    b.ToTable("SessionParticipants");
                 });
 
             modelBuilder.Entity("DNDGame.Core.Entities.Character", b =>
@@ -250,25 +308,25 @@ namespace DNDGame.Infrastructure.Migrations
                     b.OwnsOne("DNDGame.Core.ValueObjects.AbilityScores", "AbilityScores", b1 =>
                         {
                             b1.Property<int>("CharacterId")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Charisma")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Constitution")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Dexterity")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Intelligence")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Strength")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.Property<int>("Wisdom")
-                                .HasColumnType("int");
+                                .HasColumnType("INTEGER");
 
                             b1.HasKey("CharacterId");
 
@@ -282,6 +340,17 @@ namespace DNDGame.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Player");
+                });
+
+            modelBuilder.Entity("DNDGame.Core.Entities.Condition", b =>
+                {
+                    b.HasOne("DNDGame.Core.Entities.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
                 });
 
             modelBuilder.Entity("DNDGame.Core.Entities.DiceRoll", b =>
@@ -306,6 +375,25 @@ namespace DNDGame.Infrastructure.Migrations
                     b.Navigation("Session");
                 });
 
+            modelBuilder.Entity("DNDGame.Core.Entities.SessionParticipant", b =>
+                {
+                    b.HasOne("DNDGame.Core.Entities.Character", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DNDGame.Core.Entities.Session", "Session")
+                        .WithMany("Participants")
+                        .HasForeignKey("SessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("Session");
+                });
+
             modelBuilder.Entity("DNDGame.Core.Entities.Player", b =>
                 {
                     b.Navigation("Characters");
@@ -316,6 +404,8 @@ namespace DNDGame.Infrastructure.Migrations
                     b.Navigation("DiceRolls");
 
                     b.Navigation("Messages");
+
+                    b.Navigation("Participants");
                 });
 #pragma warning restore 612, 618
         }

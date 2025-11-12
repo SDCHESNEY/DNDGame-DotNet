@@ -19,8 +19,7 @@ public class DiceRollConfiguration : IEntityTypeConfiguration<DiceRoll>
             .HasMaxLength(100);
 
         builder.Property(d => d.IndividualRolls)
-            .IsRequired()
-            .HasColumnType("nvarchar(max)");
+            .IsRequired();
 
         builder.Property(d => d.Type)
             .IsRequired()

@@ -19,8 +19,7 @@ public class MessageConfiguration : IEntityTypeConfiguration<Message>
             .HasConversion<string>();
 
         builder.Property(m => m.Content)
-            .IsRequired()
-            .HasColumnType("nvarchar(max)");
+            .IsRequired();
 
         builder.Property(m => m.Timestamp)
             .IsRequired();

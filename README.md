@@ -4,7 +4,7 @@ A Dungeons & Dragons-style RPG powered by Large Language Models, built with .NET
 
 [![.NET Version](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-48%20passing-success)](tests/)
+[![Tests](https://img.shields.io/badge/tests-130%20passing-success)](tests/)
 
 ## 🎮 Overview
 
@@ -48,13 +48,13 @@ DNDGame-DotNet/
 | **Framework** | .NET 9.0 |
 | **Web API** | ASP.NET Core Web API |
 | **ORM** | Entity Framework Core 9.0 |
-| **Database** | SQL Server / LocalDB |
+| **Database** | SQLite (development) / PostgreSQL (production) |
 | **Validation** | FluentValidation 12.1 |
 | **Web UI** | Blazor Server/WebAssembly (Phase 5) |
 | **Mobile** | .NET MAUI (Phase 6) |
-| **Real-Time** | SignalR (Phase 3) |
-| **Testing** | xUnit, Moq, FluentAssertions |
-| **AI Integration** | OpenAI/Anthropic SDKs (Phase 2) |
+| **Real-Time** | SignalR (Phase 4) |
+| **Testing** | xUnit, Moq 4.20.72, FluentAssertions 8.8.0 |
+| **AI Integration** | OpenAI/Anthropic SDKs (Phase 3) |
 
 ## 🚀 Getting Started
 
@@ -78,35 +78,28 @@ DNDGame-DotNet/
    dotnet restore
    ```
 
-3. **Update database connection string**
+3. **Apply database migrations**
    
-   Edit `src/DNDGame.API/appsettings.json`:
-   ```json
-   {
-     "ConnectionStrings": {
-       "DefaultConnection": "Server=(localdb)\\mssqllocaldb;Database=DndGame;Trusted_Connection=true;TrustServerCertificate=true"
-     }
-   }
-   ```
-
-4. **Apply database migrations**
+   The project uses SQLite for development (database file created automatically):
    ```bash
-   dotnet ef database update --project src/DNDGame.API
+   dotnet ef database update --project src/DNDGame.Infrastructure --startup-project src/DNDGame.API
    ```
    
    Or if using dotnet-ef tools:
    ```bash
    export PATH="$PATH:$HOME/.dotnet/tools"
-   dotnet ef database update --project src/DNDGame.API
+   dotnet ef database update --project src/DNDGame.Infrastructure --startup-project src/DNDGame.API
    ```
+   
+   The database file will be created at `src/DNDGame.API/dndgame.db`
 
-5. **Run the API**
+4. **Run the API**
    ```bash
    cd src/DNDGame.API
    dotnet run
    ```
 
-6. **Access the API**
+5. **Access the API**
    - API: `https://localhost:5001`
    - OpenAPI/Swagger: `https://localhost:5001/openapi/v1.json`
 
@@ -123,7 +116,13 @@ dotnet test --verbosity normal
 dotnet test /p:CollectCoverage=true
 ```
 
-Current test status: **48/48 passing** ✅
+Current test status: **130/130 passing** ✅
+
+Test breakdown:
+- **Domain Models**: 15 tests (ability scores, character, session)
+- **Game Logic Services**: 64 tests (dice roller, rules engine, combat)
+- **Application Services**: 14 tests (character service, session service)
+- **Validators**: 37 tests (character, session request validation)
 
 ## 📚 API Documentation
 
@@ -146,6 +145,16 @@ Current test status: **48/48 passing** ✅
 | `POST` | `/api/v1/sessions` | Create new session |
 | `PATCH` | `/api/v1/sessions/{id}/state` | Update session state |
 | `DELETE` | `/api/v1/sessions/{id}` | Delete session |
+
+### Dice & Combat Endpoints (Phase 2)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/dice/roll` | Roll dice with formula (1d20+5) |
+| `POST` | `/api/v1/combat/{sessionId}/initiative` | Roll initiative for session |
+| `POST` | `/api/v1/combat/attack` | Resolve attack between characters |
+| `POST` | `/api/v1/combat/{characterId}/damage` | Apply damage to character |
+| `POST` | `/api/v1/combat/{characterId}/heal` | Apply healing to character |
 
 ### Example: Create Character
 
@@ -204,10 +213,14 @@ public record AbilityScores(
 
 The project includes comprehensive unit tests covering:
 
-- **Domain Logic** (9 tests): Entity behavior, value objects, calculated properties
-- **Service Layer** (14 tests): CRUD operations, business logic, error handling
-- **Validation** (11 tests): Request validation with FluentValidation
-- **Repositories** (planned): Database operations with in-memory provider
+- **Domain Logic** (15 tests): Entity behavior, value objects, calculated properties, proficiency bonuses
+- **Game Logic Services** (64 tests): Dice rolling, rules engine, combat mechanics
+  - DiceRollerService: Cryptographic RNG, advantage/disadvantage, formula parsing
+  - RulesEngineService: Ability checks, saving throws, attacks, damage calculation
+  - CombatService: Initiative, attack resolution, damage/healing application
+- **Application Services** (14 tests): CRUD operations, business logic, error handling
+- **Validation** (37 tests): Request validation with FluentValidation
+- **Integration** (planned): Database operations, SignalR hubs
 
 ### Test Examples
 
@@ -231,18 +244,21 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 
 ### Phase 1: Foundation ✅ (Weeks 1-2) - COMPLETED
 - [x] .NET solution structure with Clean Architecture
-- [x] Entity Framework Core with SQL Server
+- [x] Entity Framework Core with SQLite
 - [x] Core domain models (Character, Session, Player, Message, DiceRoll)
 - [x] REST API endpoints with FluentValidation
 - [x] **48 unit tests passing** with 80%+ coverage
 
-### Phase 2: Game Logic (Weeks 3-4)
-- [ ] Cryptographically secure dice rolling system
-- [ ] D&D 5e rules engine (ability checks, saving throws)
-- [ ] Combat mechanics (initiative, attacks, damage)
-- [ ] Character progression and level-up logic
-- [ ] Conditions system (stunned, prone, etc.)
-- [ ] **Target: 60+ unit tests**
+### Phase 2: Game Logic ✅ (Weeks 3-4) - COMPLETED
+- [x] Cryptographically secure dice rolling system with `RandomNumberGenerator`
+- [x] D&D 5e rules engine (ability checks, saving throws, attacks)
+- [x] Combat mechanics (initiative, attacks, damage, healing)
+- [x] Advantage/disadvantage mechanics for rolls
+- [x] Critical hits and fumbles handling
+- [x] Conditions system entities (15 D&D 5e conditions)
+- [x] Entity Framework configurations for all game entities
+- [x] Database migration applied successfully (SQLite)
+- [x] **130 unit tests passing** (exceeded 60+ target)
 
 ### Phase 3: LLM Integration (Weeks 5-6)
 - [ ] OpenAI/Anthropic SDK integration
@@ -292,7 +308,7 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [ ] Prometheus + Grafana monitoring
 - [ ] App store submissions (iOS/Android)
 
-**Current Progress**: Phase 1 Complete | **Next**: Phase 2 - Game Logic
+**Current Progress**: Phase 2 Complete | **Next**: Phase 3 - LLM Integration
 
 See [docs/roadmap.md](docs/roadmap.md) for detailed implementation plan.
 

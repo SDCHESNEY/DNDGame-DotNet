@@ -227,47 +227,72 @@ public void ProficiencyBonus_CalculatesCorrectlyByLevel(int level, int expectedB
 
 ## 📈 Development Roadmap
 
-### Phase 1: Foundation ✅ (Completed)
-- [x] .NET solution structure
-- [x] Domain models and EF Core
-- [x] REST API with validation
-- [x] 48 unit tests
+This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) for detailed tasks, acceptance criteria, and test coverage goals.
 
-### Phase 2: LLM Integration (Weeks 3-4)
+### Phase 1: Foundation ✅ (Weeks 1-2) - COMPLETED
+- [x] .NET solution structure with Clean Architecture
+- [x] Entity Framework Core with SQL Server
+- [x] Core domain models (Character, Session, Player, Message, DiceRoll)
+- [x] REST API endpoints with FluentValidation
+- [x] **48 unit tests passing** with 80%+ coverage
+
+### Phase 2: Game Logic (Weeks 3-4)
+- [ ] Cryptographically secure dice rolling system
+- [ ] D&D 5e rules engine (ability checks, saving throws)
+- [ ] Combat mechanics (initiative, attacks, damage)
+- [ ] Character progression and level-up logic
+- [ ] Conditions system (stunned, prone, etc.)
+- [ ] **Target: 60+ unit tests**
+
+### Phase 3: LLM Integration (Weeks 5-6)
 - [ ] OpenAI/Anthropic SDK integration
-- [ ] Prompt engineering for DM responses
-- [ ] Context management
-- [ ] Streaming responses
+- [ ] System prompt templates for DM
+- [ ] Conversation context management
+- [ ] Streaming response handling
+- [ ] Content moderation and rate limiting
+- [ ] **Target: 40+ unit tests, 10+ integration tests**
 
-### Phase 3: Real-Time Communication (Weeks 5-6)
-- [ ] SignalR hubs
-- [ ] WebSocket connections
-- [ ] Real-time dice rolls
-- [ ] Live chat system
+### Phase 4: Real-Time Features (Weeks 7-8)
+- [ ] SignalR hubs for multiplayer sessions
+- [ ] WebSocket client in Blazor
+- [ ] Turn-based combat synchronization
+- [ ] Presence tracking and reconnection logic
+- [ ] Real-time dice rolling and messaging
+- [ ] **Target: 50+ integration tests**
 
-### Phase 4: Game Logic (Weeks 7-9)
-- [ ] Dice rolling engine
-- [ ] Combat system
-- [ ] Skill checks
-- [ ] Experience and leveling
+### Phase 5: Blazor Web UI (Weeks 9-10)
+- [ ] Responsive layout with Tailwind CSS
+- [ ] Character sheet and creation wizard
+- [ ] Chat panel with DM/player differentiation
+- [ ] Dice roller and initiative tracker
+- [ ] Session lobby and management
+- [ ] **Target: 40+ component tests (bUnit)**
 
-### Phase 5: Blazor Web UI (Weeks 10-12)
-- [ ] Character sheet components
-- [ ] Session lobby
-- [ ] Chat interface
-- [ ] Responsive design
+### Phase 6: MAUI Mobile App (Weeks 11-12)
+- [ ] .NET MAUI Blazor Hybrid setup
+- [ ] MVVM pattern with CommunityToolkit
+- [ ] Offline data sync with SQLite
+- [ ] Push notifications and biometric auth
+- [ ] Platform-specific services (iOS/Android)
+- [ ] **Target: 35+ unit tests**
 
-### Phase 6: MAUI Mobile App (Weeks 13-15)
-- [ ] iOS/Android apps
-- [ ] Offline mode
-- [ ] Push notifications
-- [ ] Native features
+### Phase 7: Testing & Polish (Weeks 13-14)
+- [ ] Comprehensive test suite (500+ tests)
+- [ ] Performance optimization and caching
+- [ ] Security audit (OWASP Top 10)
+- [ ] Accessibility audit (WCAG 2.1 AA)
+- [ ] Load testing SignalR hubs
+- [ ] **Target: 80%+ code coverage**
 
-### Phase 7: Polish & Deploy (Week 16)
-- [ ] Performance optimization
-- [ ] Security hardening
-- [ ] Azure deployment
-- [ ] Documentation
+### Phase 8: Deployment (Weeks 15-16)
+- [ ] Docker images for API and Blazor Server
+- [ ] Docker Compose with PostgreSQL and Redis
+- [ ] Nginx reverse proxy with SSL
+- [ ] CI/CD pipelines (GitHub Actions)
+- [ ] Prometheus + Grafana monitoring
+- [ ] App store submissions (iOS/Android)
+
+**Current Progress**: Phase 1 Complete | **Next**: Phase 2 - Game Logic
 
 See [docs/roadmap.md](docs/roadmap.md) for detailed implementation plan.
 

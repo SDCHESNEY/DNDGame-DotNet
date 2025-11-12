@@ -1242,43 +1242,43 @@ Expected breakdown:
 ## Phase 8: Deployment (Weeks 15-16)
 
 ### Goals
-Deploy to production with CI/CD pipelines, monitoring, and documentation.
+Deploy to production using Docker containers with CI/CD pipelines, monitoring, and documentation.
 
 ### Tasks
-- [ ] Set up Azure resources (App Service, SQL Database, Redis)
-- [ ] Configure CI/CD pipelines (GitHub Actions)
-- [ ] Deploy API and databases
-- [ ] Publish Blazor Server app
-- [ ] Deploy Blazor WebAssembly to CDN
+- [ ] Create Docker images for API and Blazor Server
+- [ ] Set up production server with Docker and Docker Compose
+- [ ] Configure reverse proxy (Nginx) with SSL certificates
+- [ ] Set up PostgreSQL and Redis containers
+- [ ] Configure CI/CD pipelines with GitHub Actions
+- [ ] Deploy containerized applications
 - [ ] Submit MAUI apps to app stores (Apple App Store, Google Play)
-- [ ] Set up Application Insights monitoring
+- [ ] Set up monitoring with Prometheus/Grafana stack
 - [ ] Configure alerts and dashboards
 - [ ] Create deployment documentation
 - [ ] Conduct user acceptance testing
 
-### Infrastructure as Code
+### Docker-Based Infrastructure
 ```yaml
-# .github/workflows/deploy-api.yml
-name: Deploy API to Azure
+# .github/workflows/deploy.yml
+name: Build and Deploy DNDGame
 
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'src/DNDGame.API/**'
-      - 'src/DNDGame.Application/**'
-      - 'src/DNDGame.Core/**'
-      - 'src/DNDGame.Infrastructure/**'
+    branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-deploy:
+  build-and-test:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     
@@ -1286,10 +1286,10 @@ jobs:
       run: dotnet restore
     
     - name: Build
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --no-restore --configuration Release
     
     - name: Test
-      run: dotnet test --no-build --verbosity normal --logger trx --results-directory TestResults
+      run: dotnet test --no-build --verbosity normal --configuration Release --logger trx --results-directory TestResults
     
     - name: Publish Test Results
       uses: EnricoMi/publish-unit-test-result-action@v2
@@ -1297,53 +1297,51 @@ jobs:
       with:
         files: TestResults/**/*.trx
     
-    - name: Publish API
-      run: dotnet publish src/DNDGame.API/DNDGame.API.csproj --configuration Release --output ./publish
-    
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
       with:
-        app-name: 'dndgame-api'
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ./publish
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: Run Database Migrations
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+    
+    - name: Build and push API Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/DNDGame.API/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    
+    - name: Build and push Blazor Server Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/DNDGame.Web.Server/Dockerfile
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-blazor:${{ github.sha }}
+    
+    - name: Deploy to Production
+      if: github.ref == 'refs/heads/main'
       run: |
-        dotnet tool install --global dotnet-ef
-        dotnet ef database update --project src/DNDGame.Infrastructure --startup-project src/DNDGame.API --connection "${{ secrets.DATABASE_CONNECTION_STRING }}"
-
-# .github/workflows/deploy-blazor.yml
-name: Deploy Blazor WebAssembly
-
-on:
-  push:
-    branches: [ main ]
-    paths:
-      - 'src/DNDGame.Web.Client/**'
-      - 'src/DNDGame.Shared/**'
-
-jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '8.0.x'
-    
-    - name: Publish Blazor WASM
-      run: dotnet publish src/DNDGame.Web.Client/DNDGame.Web.Client.csproj -c Release -o publish
-    
-    - name: Upload to Azure Static Web Apps
-      uses: Azure/static-web-apps-deploy@v1
-      with:
-        azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        action: "upload"
-        app_location: "publish/wwwroot"
+        # SSH into production server and update containers
+        echo "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+        chmod 600 deploy_key
+        ssh -i deploy_key -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} '
+          cd /opt/dndgame &&
+          docker-compose pull &&
+          docker-compose up -d --remove-orphans
+        '
 
 # .github/workflows/deploy-maui-ios.yml
 name: Deploy MAUI iOS to App Store
@@ -1384,145 +1382,239 @@ jobs:
           --apiIssuer ${{ secrets.APP_STORE_ISSUER_ID }}
 ```
 
-### Azure Resources
-```bicep
-// infrastructure/main.bicep
-param location string = 'eastus'
-param environment string = 'production'
+### Docker Configuration
+```dockerfile
+# src/DNDGame.API/Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
 
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-03-01' = {
-  name: 'dndgame-plan-${environment}'
-  location: location
-  sku: {
-    name: 'P1v2'
-    tier: 'PremiumV2'
-    capacity: 2
-  }
-  kind: 'linux'
-  properties: {
-    reserved: true
-  }
-}
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["src/DNDGame.API/DNDGame.API.csproj", "src/DNDGame.API/"]
+COPY ["src/DNDGame.Application/DNDGame.Application.csproj", "src/DNDGame.Application/"]
+COPY ["src/DNDGame.Core/DNDGame.Core.csproj", "src/DNDGame.Core/"]
+COPY ["src/DNDGame.Infrastructure/DNDGame.Infrastructure.csproj", "src/DNDGame.Infrastructure/"]
+COPY ["src/DNDGame.Shared/DNDGame.Shared.csproj", "src/DNDGame.Shared/"]
+RUN dotnet restore "src/DNDGame.API/DNDGame.API.csproj"
+COPY . .
+WORKDIR "/src/src/DNDGame.API"
+RUN dotnet build "DNDGame.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
-resource webApp 'Microsoft.Web/sites@2022-03-01' = {
-  name: 'dndgame-api-${environment}'
-  location: location
-  properties: {
-    serverFarmId: appServicePlan.id
-    siteConfig: {
-      linuxFxVersion: 'DOTNETCORE|8.0'
-      alwaysOn: true
-      webSocketsEnabled: true
-    }
-  }
-}
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "DNDGame.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
-resource sqlServer 'Microsoft.Sql/servers@2022-05-01-preview' = {
-  name: 'dndgame-sql-${environment}'
-  location: location
-  properties: {
-    administratorLogin: 'sqladmin'
-    administratorLoginPassword: '<secure-password>'
-  }
-}
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "DNDGame.API.dll"]
+```
 
-resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
-  parent: sqlServer
-  name: 'dndgame'
-  location: location
-  sku: {
-    name: 'S1'
-    tier: 'Standard'
-  }
-}
+```yaml
+# docker-compose.yml
+version: '3.8'
 
-resource redisCache 'Microsoft.Cache/redis@2023-04-01' = {
-  name: 'dndgame-redis-${environment}'
-  location: location
-  properties: {
-    sku: {
-      name: 'Basic'
-      family: 'C'
-      capacity: 1
-    }
-  }
-}
+services:
+  api:
+    image: ghcr.io/sdchesney/dndgame-dotnet:latest
+    container_name: dndgame-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080;https://+:8081
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=dndgame;Username=dnduser;Password=${DB_PASSWORD}
+      - Redis__ConnectionString=redis:6379
+      - Jwt__Key=${JWT_SECRET_KEY}
+      - OpenAI__ApiKey=${OPENAI_API_KEY}
+    depends_on:
+      - database
+      - redis
+    networks:
+      - dndgame-network
 
-resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: 'dndgame-appinsights-${environment}'
-  location: location
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-  }
-}
+  blazor-server:
+    image: ghcr.io/sdchesney/dndgame-dotnet-blazor:latest
+    container_name: dndgame-blazor
+    ports:
+      - "8082:8080"
+    depends_on:
+      - api
+    networks:
+      - dndgame-network
+
+  database:
+    image: postgres:15-alpine
+    container_name: dndgame-db
+    environment:
+      - POSTGRES_DB=dndgame
+      - POSTGRES_USER=dnduser
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - dndgame-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: dndgame-redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - dndgame-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: dndgame-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+    depends_on:
+      - blazor-server
+      - api
+    networks:
+      - dndgame-network
+
+networks:
+  dndgame-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
 ```
 
 ### Monitoring & Alerts
 ```csharp
-// Program.cs - Application Insights
-builder.Services.AddApplicationInsightsTelemetry(options =>
-{
-    options.ConnectionString = builder.Configuration["ApplicationInsights:ConnectionString"];
-    options.EnableAdaptiveSampling = true;
-    options.EnableQuickPulseMetricStream = true;
-});
+// Program.cs - Prometheus Metrics
+builder.Services.AddSingleton<IMetricsRoot>(App.Metrics.CreateDefaultBuilder()
+    .Configuration.Configure(options =>
+    {
+        options.DefaultContextLabel = "dndgame";
+        options.Enabled = true;
+    })
+    .OutputMetrics.AsPrometheusPlainText()
+    .Build());
 
 // Custom metrics
 public class MetricsService
 {
-    private readonly TelemetryClient _telemetry;
+    private readonly IMetricsRoot _metrics;
+    
+    public MetricsService(IMetricsRoot metrics)
+    {
+        _metrics = metrics;
+    }
     
     public void TrackDiceRoll(string formula, int result)
     {
-        _telemetry.TrackEvent("DiceRoll", new Dictionary<string, string>
-        {
-            ["Formula"] = formula,
-            ["Result"] = result.ToString()
-        });
+        _metrics.Measure.Counter.Increment("dice_rolls_total", 
+            new MetricTags("formula", formula));
+        
+        _metrics.Measure.Histogram.Update("dice_roll_results", result,
+            new MetricTags("formula", formula));
     }
     
     public void TrackSessionStart(int sessionId, int playerCount)
     {
-        _telemetry.TrackEvent("SessionStart", new Dictionary<string, string>
-        {
-            ["SessionId"] = sessionId.ToString(),
-            ["PlayerCount"] = playerCount.ToString()
-        });
+        _metrics.Measure.Counter.Increment("sessions_started_total");
+        _metrics.Measure.Gauge.SetValue("active_players", playerCount,
+            new MetricTags("session_id", sessionId.ToString()));
     }
     
     public void TrackLlmRequest(string model, int tokens, TimeSpan duration)
     {
-        _telemetry.TrackDependency("LLM", model, DateTime.UtcNow, duration, tokens > 0);
-        _telemetry.GetMetric("LlmTokensUsed").TrackValue(tokens);
+        _metrics.Measure.Counter.Increment("llm_requests_total",
+            new MetricTags("model", model));
+        
+        _metrics.Measure.Timer.Time("llm_request_duration",
+            new MetricTags("model", model));
+        
+        _metrics.Measure.Histogram.Update("llm_tokens_used", tokens,
+            new MetricTags("model", model));
     }
 }
 ```
 
+```yaml
+# monitoring/docker-compose.monitoring.yml
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: dndgame-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    networks:
+      - dndgame-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: dndgame-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - dndgame-network
+
+volumes:
+  prometheus_data:
+  grafana_data:
+```
+
 ### Acceptance Criteria
-- [ ] API deployed to Azure App Service
-- [ ] Database migrations applied successfully
-- [ ] Blazor Server app accessible via HTTPS
-- [ ] Blazor WASM app deployed to CDN
+- [ ] API Docker container deployed and running
+- [ ] PostgreSQL database container running with migrations applied
+- [ ] Redis cache container operational
+- [ ] Blazor Server app accessible via HTTPS through Nginx
 - [ ] MAUI iOS app submitted to App Store
 - [ ] MAUI Android app published to Google Play
-- [ ] CI/CD pipelines running successfully
-- [ ] Application Insights collecting telemetry
+- [ ] CI/CD pipelines building and pushing Docker images
+- [ ] Prometheus collecting metrics from API
+- [ ] Grafana dashboards configured and accessible
 - [ ] Alerts configured for errors and performance
 - [ ] Health checks responding correctly
-- [ ] SSL certificates configured
+- [ ] SSL certificates configured in Nginx
 - [ ] Custom domain configured (e.g., dndgame.com)
 
 ### Test Results Summary
 **Deployment Verification Checklist**:
 
 - [ ] **API Health Check**: `GET https://api.dndgame.com/health` returns 200
-- [ ] **Database Connectivity**: Connection pool healthy, queries <10ms
-- [ ] **Redis Connectivity**: Cache hit rate >80%
-- [ ] **SignalR**: WebSocket connections successful
+- [ ] **Database Connectivity**: PostgreSQL container healthy, queries <10ms
+- [ ] **Redis Connectivity**: Redis container operational, cache hit rate >80%
+- [ ] **Docker Containers**: All containers running and healthy
+- [ ] **Nginx Proxy**: Reverse proxy routing correctly
+- [ ] **SignalR**: WebSocket connections successful through proxy
 - [ ] **Authentication**: JWT tokens work correctly
 - [ ] **LLM Integration**: Responses within 5 seconds
-- [ ] **Blazor WASM**: Loads in <3 seconds
+- [ ] **Blazor Server**: Loads in <3 seconds
 - [ ] **MAUI Apps**: Launch time <3 seconds
 
 **Performance Testing (Production)**:
@@ -1540,12 +1632,13 @@ public class MetricsService
 - [ ] User engagement metrics
 
 **Cost Monitoring**:
-- Azure App Service: ~$100/month
-- Azure SQL Database: ~$30/month
-- Azure Cache for Redis: ~$20/month
-- Application Insights: ~$10/month
+- VPS/Dedicated Server (4 CPU, 8GB RAM): ~$40-80/month
+- Domain & SSL Certificate: ~$15/month
+- Container Registry (GitHub): Free for public repos
+- Backup Storage: ~$10/month
+- Monitoring (self-hosted): $0
 - LLM API (OpenAI): Variable (track per session)
-- **Total**: ~$160/month + LLM costs
+- **Total**: ~$65-105/month + LLM costs
 
 **Success Criteria**:
 - ✅ All services deployed and healthy

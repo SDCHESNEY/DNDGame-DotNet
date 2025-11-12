@@ -1111,33 +1111,38 @@ public class DiceRollerTests : TestContext
 - **Database**: SQLite for rapid development
 - **LLM**: OpenAI API with development key
 
-### Production Environment
-- **API**: Azure App Service or AWS Elastic Beanstalk
-- **Database**: Azure SQL Database or AWS RDS
-- **Cache**: Azure Cache for Redis
-- **Storage**: Azure Blob Storage for character exports
-- **CDN**: Azure CDN or CloudFront for static assets
-- **Monitoring**: Application Insights or AWS CloudWatch
+### Production Environment (Docker-based)
+- **API**: Multi-stage Docker image with ASP.NET Core runtime
+- **Database**: PostgreSQL or SQL Server in Docker container
+- **Cache**: Redis Docker container for session state and pub/sub
+- **Storage**: Local volume mounts or S3-compatible object storage
+- **Reverse Proxy**: Nginx or Traefik for SSL termination and load balancing
+- **Monitoring**: Prometheus + Grafana stack in containers
+- **Container Orchestration**: Docker Compose for single-host or Kubernetes for multi-host
 
 ### CI/CD Pipeline (GitHub Actions)
 
 ```yaml
 # .github/workflows/deploy.yml
-name: Deploy DNDGame
+name: Build and Deploy DNDGame
 
 on:
   push:
     branches: [ main, develop ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: '8.0.x'
     
@@ -1150,18 +1155,185 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal --configuration Release
     
-    - name: Publish API
-      run: dotnet publish src/DNDGame.API/DNDGame.API.csproj -c Release -o ./publish/api
-    
-    - name: Publish Blazor Server
-      run: dotnet publish src/DNDGame.Web.Server/DNDGame.Web.Server.csproj -c Release -o ./publish/blazor-server
-    
-    - name: Deploy to Azure
-      uses: azure/webapps-deploy@v2
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
       with:
-        app-name: dndgame-api
-        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-        package: ./publish/api
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+    
+    - name: Build and push API Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/DNDGame.API/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+    
+    - name: Build and push Blazor Server Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./src/DNDGame.Web.Server/Dockerfile
+        push: true
+        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-blazor:${{ github.sha }}
+    
+    - name: Deploy to Production
+      if: github.ref == 'refs/heads/main'
+      run: |
+        # SSH into production server and update containers
+        echo "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+        chmod 600 deploy_key
+        ssh -i deploy_key -o StrictHostKeyChecking=no ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} '
+          cd /opt/dndgame &&
+          docker-compose pull &&
+          docker-compose up -d --remove-orphans
+        '
+```
+
+### Docker Configuration
+
+#### API Dockerfile
+```dockerfile
+# src/DNDGame.API/Dockerfile
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+COPY ["src/DNDGame.API/DNDGame.API.csproj", "src/DNDGame.API/"]
+COPY ["src/DNDGame.Application/DNDGame.Application.csproj", "src/DNDGame.Application/"]
+COPY ["src/DNDGame.Core/DNDGame.Core.csproj", "src/DNDGame.Core/"]
+COPY ["src/DNDGame.Infrastructure/DNDGame.Infrastructure.csproj", "src/DNDGame.Infrastructure/"]
+COPY ["src/DNDGame.Shared/DNDGame.Shared.csproj", "src/DNDGame.Shared/"]
+RUN dotnet restore "src/DNDGame.API/DNDGame.API.csproj"
+COPY . .
+WORKDIR "/src/src/DNDGame.API"
+RUN dotnet build "DNDGame.API.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "DNDGame.API.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "DNDGame.API.dll"]
+```
+
+#### Docker Compose Configuration
+```yaml
+# docker-compose.yml
+version: '3.8'
+
+services:
+  api:
+    image: ghcr.io/sdchesney/dndgame-dotnet:latest
+    container_name: dndgame-api
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080;https://+:8081
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=dndgame;Username=dnduser;Password=${DB_PASSWORD}
+      - Redis__ConnectionString=redis:6379
+      - Jwt__Key=${JWT_SECRET_KEY}
+      - OpenAI__ApiKey=${OPENAI_API_KEY}
+    depends_on:
+      - database
+      - redis
+    networks:
+      - dndgame-network
+    volumes:
+      - ./logs:/app/logs
+      - ./uploads:/app/uploads
+
+  blazor-server:
+    image: ghcr.io/sdchesney/dndgame-dotnet-blazor:latest
+    container_name: dndgame-blazor
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ApiSettings__BaseUrl=http://api:8080
+    depends_on:
+      - api
+    networks:
+      - dndgame-network
+
+  database:
+    image: postgres:15-alpine
+    container_name: dndgame-db
+    environment:
+      - POSTGRES_DB=dndgame
+      - POSTGRES_USER=dnduser
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - dndgame-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: dndgame-redis
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - dndgame-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: dndgame-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/logs:/var/log/nginx
+    depends_on:
+      - blazor-server
+      - api
+    networks:
+      - dndgame-network
+
+networks:
+  dndgame-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+```
+
+#### Production Environment Configuration
+```bash
+# .env.production
+DB_PASSWORD=your_secure_database_password
+JWT_SECRET_KEY=your_jwt_secret_key_32_characters_min
+OPENAI_API_KEY=sk-your_openai_api_key
 ```
 
 ---
@@ -1221,12 +1393,14 @@ jobs:
 - [ ] Security audit
 
 ### Phase 8: Deployment (Weeks 15-16)
-- [ ] Set up Azure resources or AWS infrastructure
-- [ ] Configure CI/CD pipelines
-- [ ] Deploy API and databases
-- [ ] Publish Blazor Server app
+- [ ] Create Docker images for API and Blazor Server
+- [ ] Set up production server with Docker and Docker Compose
+- [ ] Configure reverse proxy (Nginx) with SSL certificates
+- [ ] Set up PostgreSQL and Redis containers
+- [ ] Configure CI/CD pipelines with GitHub Actions
+- [ ] Deploy containerized applications
 - [ ] Submit MAUI apps to app stores
-- [ ] Set up monitoring and logging
+- [ ] Set up monitoring with Prometheus/Grafana stack
 
 ---
 

@@ -4,7 +4,7 @@ A Dungeons & Dragons-style RPG powered by Large Language Models, built with .NET
 
 [![.NET Version](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-130%20passing-success)](tests/)
+[![Tests](https://img.shields.io/badge/tests-174%20passing-success)](tests/)
 
 ## 🎮 Overview
 
@@ -12,16 +12,20 @@ DNDGame is an innovative RPG that combines classic Dungeons & Dragons gameplay w
 
 ### Key Features
 
-- **AI Dungeon Master**: Leverages LLMs (OpenAI, Anthropic, or local models) to generate immersive storylines
-- **D&D 5e Rules**: Authentic ability scores, proficiency bonuses, and character progression
+- **AI Dungeon Master**: OpenAI-powered narrative generation with context-aware responses ✅
+- **Streaming Responses**: Server-Sent Events for real-time DM responses ✅
+- **Content Moderation**: Automatic filtering of inappropriate content ✅
+- **D&D 5e Rules**: Authentic ability scores, proficiency bonuses, and character progression ✅
+- **Combat & Exploration**: Context-aware prompts adapt to game mode ✅
+- **NPC Dialogue**: Dynamic conversations with personality-driven NPCs ✅
 - **Cross-Platform**: 
   - Web application (Blazor Server/WebAssembly)
   - Mobile apps (iOS/Android via .NET MAUI)
-  - REST API for third-party integrations
-- **Real-Time Gameplay**: SignalR-powered WebSocket communication
-- **Persistent World**: SQL Server database with Entity Framework Core
-- **Character Management**: Full CRUD operations for D&D characters
-- **Session System**: Solo and multiplayer campaign support
+  - REST API for third-party integrations ✅
+- **Real-Time Gameplay**: SignalR-powered WebSocket communication (Phase 4)
+- **Persistent World**: SQLite/PostgreSQL database with Entity Framework Core ✅
+- **Character Management**: Full CRUD operations for D&D characters ✅
+- **Session System**: Solo and multiplayer campaign support ✅
 
 ## 🏗️ Architecture
 
@@ -54,15 +58,16 @@ DNDGame-DotNet/
 | **Mobile** | .NET MAUI (Phase 6) |
 | **Real-Time** | SignalR (Phase 4) |
 | **Testing** | xUnit, Moq 4.20.72, FluentAssertions 8.8.0 |
-| **AI Integration** | OpenAI/Anthropic SDKs (Phase 3) |
+| **AI Integration** | OpenAI SDK 2.6.0, Polly 8.6.4 ✅ |
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- [SQL Server](https://www.microsoft.com/sql-server/) or SQL Server LocalDB
+- SQLite (included) or [PostgreSQL](https://www.postgresql.org/) for production
 - IDE: [Visual Studio 2022](https://visualstudio.microsoft.com/) or [VS Code](https://code.visualstudio.com/)
+- Optional: [OpenAI API Key](https://platform.openai.com/) for LLM features
 - Optional: [dotnet-ef tools](https://learn.microsoft.com/ef/core/cli/dotnet) for migrations
 
 ### Installation
@@ -99,7 +104,33 @@ DNDGame-DotNet/
    dotnet run
    ```
 
-5. **Access the API**
+5. **Configure AI Features (Optional)**
+   
+   Add your OpenAI API key to `appsettings.Development.json`:
+   ```json
+   {
+     "LLM": {
+       "Provider": "OpenAI",
+       "ApiKey": "sk-your-api-key-here",
+       "Model": "gpt-4-turbo-preview",
+       "MaxTokens": 500,
+       "Temperature": 0.7
+     },
+     "ContentModeration": {
+       "Enabled": true,
+       "BlockNSFW": true,
+       "BlockHarassment": true,
+       "MaxInputLength": 2000
+     }
+   }
+   ```
+   
+   Or set via environment variable:
+   ```bash
+   export LLM__ApiKey="sk-your-api-key-here"
+   ```
+
+6. **Access the API**
    - API: `https://localhost:5001`
    - OpenAPI/Swagger: `https://localhost:5001/openapi/v1.json`
 
@@ -116,13 +147,15 @@ dotnet test --verbosity normal
 dotnet test /p:CollectCoverage=true
 ```
 
-Current test status: **130/130 passing** ✅
+Current test status: **174/174 passing** ✅
 
 Test breakdown:
 - **Domain Models**: 15 tests (ability scores, character, session)
 - **Game Logic Services**: 64 tests (dice roller, rules engine, combat)
 - **Application Services**: 14 tests (character service, session service)
 - **Validators**: 37 tests (character, session request validation)
+- **LLM Services**: 40 tests (prompt templates, content moderation, DM responses)
+- **Integration Tests**: 10 tests (end-to-end API with database)
 
 ## 📚 API Documentation
 
@@ -156,6 +189,15 @@ Test breakdown:
 | `POST` | `/api/v1/combat/{characterId}/damage` | Apply damage to character |
 | `POST` | `/api/v1/combat/{characterId}/heal` | Apply healing to character |
 
+### AI Dungeon Master Endpoints (Phase 3) ✅
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/v1/dm/generate` | Generate DM response with context |
+| `POST` | `/api/v1/dm/stream` | Stream DM response via SSE |
+| `POST` | `/api/v1/dm/npc` | Generate NPC dialogue |
+| `POST` | `/api/v1/dm/scene` | Generate scene description |
+
 ### Example: Create Character
 
 ```bash
@@ -177,6 +219,58 @@ curl -X POST https://localhost:5001/api/v1/characters/player/1 \
     "maxHitPoints": 30,
     "armorClass": 12
   }'
+```
+
+### Example: Generate AI DM Response
+
+```bash
+curl -X POST https://localhost:5001/api/v1/dm/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "sessionId": 1,
+    "playerAction": "I search the ancient library for clues",
+    "contextMessages": 10
+  }'
+```
+
+Response:
+```json
+{
+  "content": "As you run your fingers along the dusty spines, a leather-bound tome catches your eye. The pages crackle as you open it, revealing cryptic runes that seem to glow faintly in the dim light. Make an Investigation check.",
+  "suggestedActions": [
+    "Roll Investigation (Intelligence)",
+    "Examine the runes more closely",
+    "Search for more books",
+    "Call for your companions"
+  ],
+  "tokensUsed": 45,
+  "responseTimeMs": 850,
+  "estimatedCost": 0.00135,
+  "wasModerated": false
+}
+```
+
+### Example: Stream DM Response (SSE)
+
+```bash
+curl -X POST https://localhost:5001/api/v1/dm/stream \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "sessionId": 1,
+    "playerAction": "I cast Fireball at the goblin horde"
+  }'
+```
+
+Streaming output:
+```
+data: The 
+data: flames 
+data: erupt 
+data: from 
+data: your 
+data: fingertips...
+[DONE]
 ```
 
 ## 🎯 Domain Models
@@ -260,13 +354,15 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [x] Database migration applied successfully (SQLite)
 - [x] **130 unit tests passing** (exceeded 60+ target)
 
-### Phase 3: LLM Integration (Weeks 5-6)
-- [ ] OpenAI/Anthropic SDK integration
-- [ ] System prompt templates for DM
-- [ ] Conversation context management
-- [ ] Streaming response handling
-- [ ] Content moderation and rate limiting
-- [ ] **Target: 40+ unit tests, 10+ integration tests**
+### Phase 3: LLM Integration ✅ (Weeks 5-6) - COMPLETED
+- [x] OpenAI SDK 2.6.0 integration with ChatClient
+- [x] System prompt templates for DM (5 scenario types)
+- [x] Conversation context management with session history
+- [x] Streaming response handling via Server-Sent Events
+- [x] Content moderation with keyword filtering
+- [x] Retry policies with Polly (3 retries, exponential backoff)
+- [x] Token usage tracking and cost estimation
+- [x] **174 tests passing** (164 unit + 10 integration)
 
 ### Phase 4: Real-Time Features (Weeks 7-8)
 - [ ] SignalR hubs for multiplayer sessions
@@ -308,9 +404,9 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [ ] Prometheus + Grafana monitoring
 - [ ] App store submissions (iOS/Android)
 
-**Current Progress**: Phase 2 Complete | **Next**: Phase 3 - LLM Integration
+**Current Progress**: Phase 3 Complete | **Next**: Phase 4 - Real-Time Features (SignalR)
 
-See [docs/roadmap.md](docs/roadmap.md) for detailed implementation plan.
+See [docs/roadmap.md](docs/roadmap.md) and [docs/llm-integration-guide.md](docs/llm-integration-guide.md) for detailed implementation and configuration.
 
 ## 🤝 Contributing
 

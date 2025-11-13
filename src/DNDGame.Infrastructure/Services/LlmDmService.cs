@@ -83,6 +83,8 @@ public class LlmDmService : ILlmDmService
                 ? outputModeration.SanitizedContent!
                 : content;
 
+            var wasModerated = outputModeration.HasViolations;
+
             if (outputModeration.HasViolations)
             {
                 _logger.LogWarning(
@@ -99,7 +101,8 @@ public class LlmDmService : ILlmDmService
                 finalContent,
                 tokensUsed,
                 stopwatch.Elapsed,
-                suggestedActions);
+                suggestedActions,
+                wasModerated);
 
             _logger.LogInformation(
                 "DM response generated successfully. Tokens: {Tokens}, Time: {Time}ms",

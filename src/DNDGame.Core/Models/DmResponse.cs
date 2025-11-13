@@ -10,7 +10,8 @@ public record DmResponse(
     MessageRole Role,
     int TokensUsed,
     TimeSpan ResponseTime,
-    List<string> SuggestedActions)
+    List<string> SuggestedActions,
+    bool WasModerated = false)
 {
     /// <summary>
     /// Creates a DM response with default role (DungeonMaster).
@@ -19,14 +20,16 @@ public record DmResponse(
         string content,
         int tokensUsed,
         TimeSpan responseTime,
-        List<string>? suggestedActions = null)
+        List<string>? suggestedActions = null,
+        bool wasModerated = false)
     {
         return new DmResponse(
             content,
             MessageRole.DungeonMaster,
             tokensUsed,
             responseTime,
-            suggestedActions ?? new List<string>());
+            suggestedActions ?? new List<string>(),
+            wasModerated);
     }
 
     /// <summary>

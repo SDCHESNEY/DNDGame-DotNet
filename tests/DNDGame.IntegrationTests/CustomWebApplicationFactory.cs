@@ -3,6 +3,7 @@ using DNDGame.Core.Models;
 using DNDGame.Infrastructure.Data;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -11,43 +12,33 @@ namespace DNDGame.IntegrationTests;
 
 /// <summary>
 /// Custom factory for creating test server with mocked LLM provider.
-/// Uses in-memory database for isolation.
+/// Uses SQLite in-memory database for isolation.
 /// </summary>
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     public Mock<ILlmProvider> MockLlmProvider { get; } = new();
+    private SqliteConnection? _connection;
     
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.ConfigureServices(services =>
         {
-            // Remove all DbContext-related registrations to avoid provider conflicts
-            var dbContextDescriptor = services.SingleOrDefault(
+            // Remove existing DbContext registration
+            var descriptor = services.SingleOrDefault(
                 d => d.ServiceType == typeof(DbContextOptions<DndGameContext>));
-            if (dbContextDescriptor != null)
+            if (descriptor != null)
             {
-                services.Remove(dbContextDescriptor);
+                services.Remove(descriptor);
             }
 
-            var dbContextOptionsDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions));
-            if (dbContextOptionsDescriptor != null)
-            {
-                services.Remove(dbContextOptionsDescriptor);
-            }
+            // Create in-memory SQLite connection that stays open
+            _connection = new SqliteConnection("DataSource=:memory:");
+            _connection.Open();
 
-            // Remove the DbContext registration itself
-            var contextDescriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DndGameContext));
-            if (contextDescriptor != null)
-            {
-                services.Remove(contextDescriptor);
-            }
-
-            // Add in-memory database with unique name per test
+            // Add DbContext with SQLite in-memory database
             services.AddDbContext<DndGameContext>(options =>
             {
-                options.UseInMemoryDatabase($"TestDb_{Guid.NewGuid()}");
+                options.UseSqlite(_connection);
             });
 
             // Replace ILlmProvider with mock for predictable responses
@@ -67,6 +58,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
             db.Database.EnsureCreated();
         });
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _connection?.Close();
+            _connection?.Dispose();
+        }
+        base.Dispose(disposing);
     }
 
     public void SetupMockLlmResponse(string response, int tokensUsed = 50)

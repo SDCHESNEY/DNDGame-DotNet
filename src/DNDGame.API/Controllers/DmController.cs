@@ -61,7 +61,7 @@ public class DmController : ControllerBase
             // Build session context
             var context = await BuildSessionContextAsync(request.SessionId, cancellationToken);
 
-            // Generate DM response
+                        // Generate DM response
             var dmResponse = await _dmService.GenerateResponseAsync(
                 context,
                 request.PlayerMessage,
@@ -73,25 +73,30 @@ public class DmController : ControllerBase
                 Content = dmResponse.Content,
                 SuggestedActions = dmResponse.SuggestedActions,
                 TokensUsed = dmResponse.TokensUsed,
-                ResponseTimeMs = Convert.ToInt64(dmResponse.ResponseTimeMs),
+                ResponseTimeMs = Convert.ToInt64(Math.Ceiling(dmResponse.ResponseTimeMs)),
                 EstimatedCost = dmResponse.EstimatedCost,
-                WasModerated = false // TODO: Track moderation in DmResponse
+                WasModerated = dmResponse.WasModerated
             };
 
             _logger.LogInformation(
-                "Generated DM response for session {SessionId} - {TokenCount} tokens, {ResponseTime}ms",
+                "Generated DM response for session {SessionId} - {TokensUsed} tokens, {ResponseTime}ms",
                 request.SessionId,
                 dmResponse.TokensUsed,
                 dmResponse.ResponseTimeMs);
 
             return Ok(responseDto);
         }
-        catch (ValidationException ex)
+        catch (InvalidOperationException ex) when (ex.Message.Contains("moderation"))
         {
+            _logger.LogWarning(
+                ex,
+                "Content moderation blocked request for session {SessionId}",
+                request.SessionId);
+            
             return BadRequest(new ProblemDetails
             {
                 Status = StatusCodes.Status400BadRequest,
-                Title = "Validation Error",
+                Title = "Content Blocked",
                 Detail = ex.Message
             });
         }

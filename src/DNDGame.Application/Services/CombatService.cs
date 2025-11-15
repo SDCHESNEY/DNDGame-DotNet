@@ -31,6 +31,18 @@ public class CombatService : ICombatService
     }
 
     /// <inheritdoc/>
+    public InitiativeOrder RollInitiative(int sessionId)
+    {
+        // Synchronous wrapper for backward compatibility
+        var entries = RollInitiativeAsync(sessionId).GetAwaiter().GetResult();
+        return new InitiativeOrder
+        {
+            Entries = entries,
+            CurrentTurnIndex = 0
+        };
+    }
+
+    /// <inheritdoc/>
     public async Task<List<InitiativeEntry>> RollInitiativeAsync(int sessionId)
     {
         _logger.LogInformation("Rolling initiative for session {SessionId}", sessionId);

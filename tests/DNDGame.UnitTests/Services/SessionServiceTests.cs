@@ -12,12 +12,14 @@ namespace DNDGame.UnitTests.Services;
 public class SessionServiceTests
 {
     private readonly Mock<ISessionRepository> _mockRepository;
+    private readonly Mock<ICharacterRepository> _mockCharacterRepository;
     private readonly SessionService _sut;
 
     public SessionServiceTests()
     {
         _mockRepository = new Mock<ISessionRepository>();
-        _sut = new SessionService(_mockRepository.Object);
+        _mockCharacterRepository = new Mock<ICharacterRepository>();
+        _sut = new SessionService(_mockRepository.Object, _mockCharacterRepository.Object);
     }
 
     [Fact]
@@ -32,10 +34,8 @@ public class SessionServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        var dto = result as SessionDto;
-        dto.Should().NotBeNull();
-        dto!.Id.Should().Be(1);
-        dto.Title.Should().Be("Test Campaign");
+        result!.Id.Should().Be(1);
+        result.Title.Should().Be("Test Campaign");
     }
 
     [Fact]
@@ -95,9 +95,7 @@ public class SessionServiceTests
 
         // Assert
         result.Should().NotBeNull();
-        var dto = result as SessionDto;
-        dto.Should().NotBeNull();
-        dto!.State.Should().Be(SessionState.InProgress);
+        result!.State.Should().Be(SessionState.InProgress);
         
         _mockRepository.Verify(r => r.UpdateAsync(It.Is<Session>(s => 
             s.State == SessionState.InProgress), It.IsAny<CancellationToken>()), Times.Once);
@@ -147,6 +145,167 @@ public class SessionServiceTests
         _mockRepository.Verify(r => r.DeleteAsync(It.IsAny<int>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
+    // Real-Time Feature Tests
+
+    [Fact]
+    public async Task JoinSessionAsync_WithValidSessionAndCharacter_ReturnsTrue()
+    {
+        // Arrange
+        var session = CreateTestSession(1, "Test");
+        var character = CreateTestCharacter(1, "Test Character");
+        
+        _mockRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockCharacterRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(character);
+
+        // Act
+        var result = await _sut.JoinSessionAsync(1, 1);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task JoinSessionAsync_WithInvalidSession_ReturnsFalse()
+    {
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Session?)null);
+        _mockCharacterRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(CreateTestCharacter(1, "Test"));
+
+        // Act
+        var result = await _sut.JoinSessionAsync(999, 1);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task JoinSessionAsync_WithInvalidCharacter_ReturnsFalse()
+    {
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(CreateTestSession(1, "Test"));
+        _mockCharacterRepository.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Character?)null);
+
+        // Act
+        var result = await _sut.JoinSessionAsync(1, 999);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task LeaveSessionAsync_WithValidSession_ReturnsTrue()
+    {
+        // Arrange
+        var session = CreateTestSession(1, "Test");
+        _mockRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+
+        // Act
+        var result = await _sut.LeaveSessionAsync(1, 1);
+
+        // Assert
+        result.Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task LeaveSessionAsync_WithInvalidSession_ReturnsFalse()
+    {
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Session?)null);
+
+        // Act
+        var result = await _sut.LeaveSessionAsync(999, 1);
+
+        // Assert
+        result.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task SaveMessageAsync_WithValidSession_SavesAndReturnsMessage()
+    {
+        // Arrange
+        var session = CreateTestSession(1, "Test");
+        session.Messages = new List<Message>();
+        
+        _mockRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.SaveMessageAsync(1, "Test message", MessageRole.Player);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Content.Should().Be("Test message");
+        result.Role.Should().Be(MessageRole.Player);
+        result.SessionId.Should().Be(1);
+        session.Messages.Should().Contain(result);
+        _mockRepository.Verify(r => r.UpdateAsync(session, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SaveMessageAsync_WithInvalidSession_ThrowsException()
+    {
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Session?)null);
+
+        // Act
+        var act = async () => await _sut.SaveMessageAsync(999, "Test", MessageRole.Player);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Session 999 not found");
+    }
+
+    [Fact]
+    public async Task SaveDiceRollAsync_WithValidSession_SavesAndReturnsDiceRoll()
+    {
+        // Arrange
+        var session = CreateTestSession(1, "Test");
+        session.DiceRolls = new List<DiceRoll>();
+        
+        var rollResult = new Core.Models.DiceRollResult
+        {
+            Formula = "1d20",
+            Total = 15,
+            IndividualRolls = [15],
+            Modifier = 0
+        };
+        
+        _mockRepository.Setup(r => r.GetByIdAsync(1, It.IsAny<CancellationToken>())).ReturnsAsync(session);
+        _mockRepository.Setup(r => r.UpdateAsync(It.IsAny<Session>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _sut.SaveDiceRollAsync(1, "1d20", rollResult);
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Formula.Should().Be("1d20");
+        result.Total.Should().Be(15);
+        result.SessionId.Should().Be(1);
+        session.DiceRolls.Should().Contain(result);
+        _mockRepository.Verify(r => r.UpdateAsync(session, It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task SaveDiceRollAsync_WithInvalidSession_ThrowsException()
+    {
+        // Arrange
+        _mockRepository.Setup(r => r.GetByIdAsync(999, It.IsAny<CancellationToken>())).ReturnsAsync((Session?)null);
+        var rollResult = new Core.Models.DiceRollResult
+        {
+            Formula = "1d20",
+            Total = 15,
+            IndividualRolls = [15],
+            Modifier = 0
+        };
+
+        // Act
+        var act = async () => await _sut.SaveDiceRollAsync(999, "1d20", rollResult);
+
+        // Assert
+        await act.Should().ThrowAsync<InvalidOperationException>()
+            .WithMessage("Session 999 not found");
+    }
+
     private static Session CreateTestSession(int id, string title)
     {
         return new Session
@@ -154,7 +313,21 @@ public class SessionServiceTests
             Id = id,
             Title = title,
             Mode = SessionMode.Multiplayer,
-            State = SessionState.Created
+            State = SessionState.Created,
+            Messages = new List<Message>(),
+            DiceRolls = new List<DiceRoll>()
+        };
+    }
+
+    private static Character CreateTestCharacter(int id, string name)
+    {
+        return new Character
+        {
+            Id = id,
+            Name = name,
+            Class = CharacterClass.Fighter,
+            Level = 1,
+            AbilityScores = new Core.ValueObjects.AbilityScores(10, 10, 10, 10, 10, 10)
         };
     }
 }

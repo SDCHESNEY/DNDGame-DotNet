@@ -12,6 +12,13 @@ public interface ICombatService
     /// </summary>
     /// <param name="sessionId">The session ID.</param>
     /// <returns>The initiative order.</returns>
+    InitiativeOrder RollInitiative(int sessionId);
+    
+    /// <summary>
+    /// Rolls initiative for all characters in a session (async version).
+    /// </summary>
+    /// <param name="sessionId">The session ID.</param>
+    /// <returns>The initiative order.</returns>
     Task<List<InitiativeEntry>> RollInitiativeAsync(int sessionId);
 
     /// <summary>

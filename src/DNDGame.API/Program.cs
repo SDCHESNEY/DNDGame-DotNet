@@ -32,6 +32,10 @@ builder.Services.AddScoped<ISessionService, SessionService>();
 builder.Services.AddSingleton<IDiceRoller, DiceRollerService>();
 builder.Services.AddScoped<IRulesEngine, RulesEngineService>();
 builder.Services.AddScoped<ICombatService, CombatService>();
+builder.Services.AddSingleton<IPresenceService, PresenceService>();
+
+// Add memory cache for presence service
+builder.Services.AddMemoryCache();
 
 // Register LLM services
 builder.Services.Configure<LlmSettings>(
@@ -51,6 +55,18 @@ builder.Services.AddValidatorsFromAssemblyContaining<CreateCharacterRequestValid
 builder.Services.AddControllers();
 builder.Services.AddProblemDetails();
 
+// Add SignalR with JSON protocol
+builder.Services.AddSignalR(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.MaximumReceiveMessageSize = 102400; // 100 KB
+    options.StreamBufferCapacity = 10;
+})
+.AddJsonProtocol(options =>
+{
+    options.PayloadSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+});
+
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -67,6 +83,9 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+// Map SignalR hubs
+app.MapHub<DNDGame.API.Hubs.GameSessionHub>("/hubs/game-session");
 
 app.Run();
 

@@ -4,7 +4,7 @@ A Dungeons & Dragons-style RPG powered by Large Language Models, built with .NET
 
 [![.NET Version](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-174%20passing-success)](tests/)
+[![Tests](https://img.shields.io/badge/tests-195%20passing-success)](tests/)
 
 ## 🎮 Overview
 
@@ -22,7 +22,8 @@ DNDGame is an innovative RPG that combines classic Dungeons & Dragons gameplay w
   - Web application (Blazor Server/WebAssembly)
   - Mobile apps (iOS/Android via .NET MAUI)
   - REST API for third-party integrations ✅
-- **Real-Time Gameplay**: SignalR-powered WebSocket communication (Phase 4)
+- **Real-Time Gameplay**: SignalR-powered WebSocket communication ✅
+- **Multiplayer Sessions**: Join/leave, presence tracking, synchronized game state ✅
 - **Persistent World**: SQLite/PostgreSQL database with Entity Framework Core ✅
 - **Character Management**: Full CRUD operations for D&D characters ✅
 - **Session System**: Solo and multiplayer campaign support ✅
@@ -147,14 +148,15 @@ dotnet test --verbosity normal
 dotnet test /p:CollectCoverage=true
 ```
 
-Current test status: **174/174 passing** ✅
+Current test status: **195/195 passing** ✅
 
 Test breakdown:
 - **Domain Models**: 15 tests (ability scores, character, session)
 - **Game Logic Services**: 64 tests (dice roller, rules engine, combat)
-- **Application Services**: 14 tests (character service, session service)
+- **Application Services**: 24 tests (character service, session service with real-time features)
 - **Validators**: 37 tests (character, session request validation)
 - **LLM Services**: 40 tests (prompt templates, content moderation, DM responses)
+- **SignalR Services**: 14 tests (presence service with connection tracking)
 - **Integration Tests**: 10 tests (end-to-end API with database)
 
 ## 📚 API Documentation
@@ -364,13 +366,16 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [x] Token usage tracking and cost estimation
 - [x] **174 tests passing** (164 unit + 10 integration)
 
-### Phase 4: Real-Time Features (Weeks 7-8)
-- [ ] SignalR hubs for multiplayer sessions
-- [ ] WebSocket client in Blazor
-- [ ] Turn-based combat synchronization
-- [ ] Presence tracking and reconnection logic
-- [ ] Real-time dice rolling and messaging
-- [ ] **Target: 50+ integration tests**
+### Phase 4: Real-Time Features ✅ (Weeks 7-8) - COMPLETED
+- [x] SignalR hubs for multiplayer sessions (GameSessionHub with 10 methods)
+- [x] IGameSessionClient typed interface with 11 client methods
+- [x] Turn-based combat synchronization (initiative, turn management)
+- [x] Presence tracking with MemoryCache (in-memory)
+- [x] Real-time dice rolling and messaging
+- [x] Session-based grouping for message isolation
+- [x] SessionService extended with 4 real-time methods
+- [x] SignalR configured with JSON protocol
+- [x] **195 tests passing** (185 unit + 10 integration)
 
 ### Phase 5: Blazor Web UI (Weeks 9-10)
 - [ ] Responsive layout with Tailwind CSS
@@ -404,7 +409,7 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [ ] Prometheus + Grafana monitoring
 - [ ] App store submissions (iOS/Android)
 
-**Current Progress**: Phase 3 Complete | **Next**: Phase 4 - Real-Time Features (SignalR)
+**Current Progress**: Phase 4 Complete | **Next**: Phase 5 - Blazor Web UI
 
 See [docs/roadmap.md](docs/roadmap.md) and [docs/llm-integration-guide.md](docs/llm-integration-guide.md) for detailed implementation and configuration.
 

@@ -47,7 +47,7 @@ else
                 <div class="card character-card h-100" @onclick="() => ViewCharacter(character.Id)">
                     <div class="card-body">
                         <h5 class="card-title">@character.Name</h5>
-                        <p class="text-muted mb-2">Level @character.Level @character.Class</p>
+                        <p class="text-muted mb-2">@character.Class Level: @character.Level</p>
                         
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <div>

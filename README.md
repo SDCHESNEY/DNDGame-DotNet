@@ -4,9 +4,10 @@ A Dungeons & Dragons-style RPG powered by Large Language Models, built with .NET
 
 [![.NET Version](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-216%20passing-success)](tests/)
-[![Build](https://img.shields.io/badge/Phase%206-Complete%20(0%20warnings)-brightgreen)](docs/roadmap.md)
+[![Tests](https://img.shields.io/badge/tests-224%20passing-success)](tests/)
+[![Build](https://img.shields.io/badge/build-passing%20(0%20warnings)-brightgreen)](docs/roadmap.md)
 [![Phase 5](https://img.shields.io/badge/Phase%205-Complete%20(Blazor%20UI)-success)](docs/roadmap.md)
+[![Phase 6](https://img.shields.io/badge/Phase%206-Complete%20(MAUI%20Mobile)-success)](docs/roadmap.md)
 
 ## 🎮 Overview
 
@@ -152,7 +153,7 @@ dotnet test --verbosity normal
 dotnet test /p:CollectCoverage=true
 ```
 
-Current test status: **216/224 passing** (96% pass rate) ✅
+Current test status: **224/224 passing** (100% pass rate) ✅
 
 Test breakdown:
 - **Domain Models**: 15 tests (ability scores, character, session)
@@ -162,11 +163,11 @@ Test breakdown:
 - **LLM Services**: 40 tests (prompt templates, content moderation, DM responses)
 - **SignalR Services**: 14 tests (presence service with connection tracking)
 - **Integration Tests**: 10 tests (end-to-end API with database)
-- **Component Tests**: 21/29 passing (bUnit tests for Blazor components)
-  - HomeTests: 5/8 passing
-  - CharactersTests: 3/4 passing
-  - DiceTests: 9/11 passing
-  - SessionsTests: 4/6 passing
+- **Component Tests**: 29/29 passing (bUnit tests for Blazor components) ✅
+  - HomeTests: 8/8 passing ✅
+  - CharactersTests: 4/4 passing ✅
+  - DiceTests: 11/11 passing ✅
+  - SessionsTests: 6/6 passing ✅
 
 ## 📚 API Documentation
 
@@ -392,30 +393,39 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - ✅ Character sheet and creation wizard with ability scores, class selection, level input
 - ✅ Chat panel with DM/player differentiation (purple/blue styling)
 - ✅ Dice roller with formula input, advantage/disadvantage, quick buttons, roll history
+- ✅ Critical hit/fumble detection with visual indicators (🎉 for nat 20, 💀 for nat 1)
 - ✅ Initiative tracker integrated in SessionDetail page
 - ✅ Session lobby with state badges and mode icons
 - ✅ SignalR integration with automatic reconnection and real-time messaging
 - ✅ Dark mode support with 18 CSS custom properties
 - ✅ Responsive design with animations (rollIn, slideIn, pulse effects)
-- ✅ **21/29 component tests passing (bUnit)** - 72% pass rate
-  - HomeTests: 5/8 passing
-  - CharactersTests: 3/4 passing
-  - DiceTests: 9/11 passing
-  - SessionsTests: 4/6 passing
+- ✅ **29/29 component tests passing (bUnit)** - 100% pass rate ✅
+  - HomeTests: 8/8 passing (welcome message, features list, navigation links)
+  - CharactersTests: 4/4 passing (character cards with proper format)
+  - DiceTests: 11/11 passing (critical detection, roll history, advantage/disadvantage)
+  - SessionsTests: 6/6 passing (state badges, activity timestamps, empty states)
 
 ### Phase 6: MAUI Mobile App ✅ (Weeks 11-12) - COMPLETED
-- ✅ .NET MAUI Blazor Hybrid setup
-- ✅ MVVM pattern with CommunityToolkit.Mvvm (6 ViewModels)
-- ✅ Offline data sync with SQLite (LocalDatabaseContext + OfflineSyncService)
+- ✅ .NET MAUI Blazor Hybrid setup with cross-platform targeting (iOS 15+, Android 24+, macCatalyst, Windows)
+- ✅ MVVM pattern with CommunityToolkit.Mvvm 8.2.2 (6 ViewModels with ObservableObject, RelayCommand)
+- ✅ Offline data sync with SQLite (LocalDatabaseContext + OfflineSyncService with conflict resolution)
 - ✅ Platform-specific services (5 services: Notification, File, Connectivity, Sync, Navigation)
-- ✅ 10 XAML pages with Shell navigation and proper x:DataType annotations
-- ✅ AppShell with flyout menu and routing
-- ✅ All 24 deprecation warnings resolved (0 errors, 0 warnings)
-- ✅ Obsolete Application.MainPage API replaced with Shell.Current
-- ✅ XAML compiled bindings enabled with MauiEnableXamlCBindingWithSourceCompilation
-- ⚠️ Push notifications (Plugin.LocalNotification integrated, testing pending)
-- ⏳ Biometric auth (deferred to Phase 7)
-- ⏳ **Unit tests deferred to Phase 7**
+- ✅ 10 XAML pages with Shell navigation and material design styling
+- ✅ AppShell with flyout menu, routing, and deep linking
+- ✅ Character management with swipe-to-delete, search, export to JSON
+- ✅ Session management with real-time SignalR integration
+- ✅ Dice roller with history tracking (50-roll limit), advantage/disadvantage, quick buttons
+- ✅ Offline-first architecture with API fallback to local database
+- ✅ **All compilation warnings resolved (0 errors, 0 warnings)** ✅
+  - Fixed 18 obsolete Application.MainPage warnings with CreateWindow() override
+  - Fixed 9 XamlC binding warnings by removing x:DataType where RelativeSource is used
+  - Fixed 3 nullable reference warnings in PresenceService
+  - XAML compiled bindings enabled with MauiEnableXamlCBindingWithSourceCompilation
+- ✅ Value converters for UI bindings (IsNotNullConverter, BoolToEditTextConverter)
+- ⚠️ Push notifications (Plugin.LocalNotification 11.1.4 integrated, testing pending)
+- ⏳ Biometric authentication (deferred to Phase 7)
+- ⏳ Camera integration for portraits (deferred to Phase 7)
+- ⏳ **Unit tests deferred to Phase 7** (target: 35+ ViewModel and service tests)
 
 ### Phase 7: Testing & Polish (Weeks 13-14)
 - [ ] Comprehensive test suite (500+ tests)

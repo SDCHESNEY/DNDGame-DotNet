@@ -8,9 +8,9 @@
              Title="Sessions">
     <Grid RowDefinitions="*,Auto">
         <CollectionView Grid.Row="0" ItemsSource="{Binding Sessions}" Margin="10">
-            <CollectionView.ItemTemplate>
-                <DataTemplate x:DataType="entities:Session">
-                    <Frame Margin="0,5" Padding="15" BorderColor="{StaticResource Gray200}">
+                        <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="10,5" Padding="15" BorderColor="{StaticResource Gray200}" HasShadow="True">
                         <Grid ColumnDefinitions="*,Auto">
                             <VerticalStackLayout Grid.Column="0" Spacing="5">
                                 <Label Text="{Binding Title}" FontSize="18" FontAttributes="Bold"/>

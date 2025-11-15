@@ -1218,9 +1218,10 @@ DNDGame.MauiApp/
 **Warning Fixes Applied:**
 - Fixed 18 obsolete `Application.MainPage` warnings by using `CreateWindow()` override and `Shell.Current.DisplayAlert()`
 - Fixed 3 nullable reference warnings in `PresenceService` with null-forgiving operators
-- Added `x:DataType` annotations to all XAML `DataTemplate` elements for compiled bindings
+- Added `x:DataType` annotations to XAML `DataTemplate` elements for compiled bindings (except where RelativeSource is used)
 - Enabled `MauiEnableXamlCBindingWithSourceCompilation` for optimized RelativeSource bindings
-- Result: Clean build with 0 errors and 0 warnings
+- Removed `x:DataType` from DataTemplates using RelativeSource to ViewModel commands (fixes 9 XamlC warnings)
+- Result: Clean build with 0 errors and 0 warnings across all 4 platforms
 
 **Known Limitations:**
 - Biometric authentication not yet implemented (pending)

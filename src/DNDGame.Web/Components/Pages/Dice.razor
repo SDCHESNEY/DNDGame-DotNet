@@ -63,11 +63,11 @@
                             </div>
                         }
                         
-                        @if (lastRoll.IsCritical)
+                        @if (IsCriticalHit(lastRoll))
                         {
                             <div class="alert alert-success mt-2">🎉 Critical Hit!</div>
                         }
-                        else if (lastRoll.IsFumble)
+                        else if (IsCriticalFumble(lastRoll))
                         {
                             <div class="alert alert-danger mt-2">💀 Critical Fumble!</div>
                         }
@@ -168,8 +168,20 @@
     private string GetRollClass()
     {
         if (lastRoll is null) return "";
-        if (lastRoll.IsCritical) return "border-success";
-        if (lastRoll.IsFumble) return "border-danger";
+        if (IsCriticalHit(lastRoll)) return "border-success";
+        if (IsCriticalFumble(lastRoll)) return "border-danger";
         return "";
+    }
+
+    private bool IsCriticalHit(DiceRollResult roll)
+    {
+        // Check if it's a d20 roll and the result is 20
+        return roll.Formula.Contains("d20") && roll.IndividualRolls.Any(r => r == 20);
+    }
+
+    private bool IsCriticalFumble(DiceRollResult roll)
+    {
+        // Check if it's a d20 roll and the result is 1
+        return roll.Formula.Contains("d20") && roll.IndividualRolls.Any(r => r == 1);
     }
 }

@@ -92,14 +92,13 @@ public partial class MainViewModel : ObservableObject
         }
     }
 
-    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+    private void OnConnectivityChanged(object? sender, CustomConnectivityChangedEventArgs e)
     {
         IsConnected = e.IsConnected;
         
-        if (IsConnected && !IsSyncing)
+        if (IsConnected)
         {
-            // Auto-sync when connection is restored
-            _ = Task.Run(async () => await SyncDataAsync());
+            Task.Run(async () => await SyncDataAsync());
         }
     }
 }

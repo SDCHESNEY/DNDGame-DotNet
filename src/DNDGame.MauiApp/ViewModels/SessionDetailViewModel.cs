@@ -170,7 +170,7 @@ public partial class SessionDetailViewModel : ObservableObject, IQueryAttributab
         await _navigationService.GoBackAsync();
     }
 
-    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+    private void OnConnectivityChanged(object? sender, CustomConnectivityChangedEventArgs e)
     {
         IsConnected = e.IsConnected;
         

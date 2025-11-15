@@ -1,11 +1,12 @@
 using DNDGame.MauiApp.Interfaces;
 using System.Net.NetworkInformation;
+using MauiConnectivityEventArgs = Microsoft.Maui.Networking.ConnectivityChangedEventArgs;
 
 namespace DNDGame.MauiApp.Services;
 
 public class ConnectivityService : IConnectivityService
 {
-    public event EventHandler<ConnectivityChangedEventArgs>? ConnectivityChanged;
+    public event EventHandler<CustomConnectivityChangedEventArgs>? ConnectivityChanged;
 
     public ConnectivityService()
     {
@@ -33,9 +34,9 @@ public class ConnectivityService : IConnectivityService
         }
     }
 
-    private void OnConnectivityChanged(object? sender, ConnectivityChangedEventArgs e)
+    private void OnConnectivityChanged(object? sender, MauiConnectivityEventArgs e)
     {
         var isConnected = e.NetworkAccess == NetworkAccess.Internet;
-        ConnectivityChanged?.Invoke(this, new ConnectivityChangedEventArgs(isConnected));
+        ConnectivityChanged?.Invoke(this, new CustomConnectivityChangedEventArgs(isConnected));
     }
 }

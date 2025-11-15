@@ -3,12 +3,16 @@ namespace DNDGame.MauiApp.Interfaces;
 public interface IConnectivityService
 {
     bool IsConnected { get; }
-    event EventHandler<ConnectivityChangedEventArgs> ConnectivityChanged;
+    event EventHandler<CustomConnectivityChangedEventArgs>? ConnectivityChanged;
     Task<bool> IsHostReachableAsync(string host);
 }
 
-public class ConnectivityChangedEventArgs : EventArgs
+public class CustomConnectivityChangedEventArgs : EventArgs
 {
-    public bool IsConnected { get; set; }
-    public NetworkAccess NetworkAccess { get; set; }
+    public bool IsConnected { get; }
+    
+    public CustomConnectivityChangedEventArgs(bool isConnected)
+    {
+        IsConnected = isConnected;
+    }
 }

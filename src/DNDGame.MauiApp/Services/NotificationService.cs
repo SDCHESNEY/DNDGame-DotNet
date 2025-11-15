@@ -1,9 +1,9 @@
-using DNDGame.MauiApp.Interfaces;
 using Plugin.LocalNotification;
+using INotificationService = DNDGame.MauiApp.Interfaces.INotificationService;
 
 namespace DNDGame.MauiApp.Services;
 
-public class NotificationService : DNDGame.MauiApp.Interfaces.INotificationService
+public class NotificationService : INotificationService
 {
     public async Task<bool> RequestPermissionAsync()
     {

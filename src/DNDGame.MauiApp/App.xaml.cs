@@ -1,6 +1,6 @@
 ﻿namespace DNDGame.MauiApp;
 
-public partial class App : Application
+public partial class App : Microsoft.Maui.Controls.Application
 {
     public App()
     {
@@ -9,8 +9,8 @@ public partial class App : Application
         MainPage = new AppShell();
     }
 
-    protected override Window CreateWindow(IActivationState? activationState)
+    protected override Microsoft.Maui.Controls.Window CreateWindow(Microsoft.Maui.IActivationState? activationState)
     {
-        return new Window(MainPage) { Title = "DND Game" };
+        return new Microsoft.Maui.Controls.Window(MainPage) { Title = "DND Game" };
     }
 }

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using DNDGame.MauiApp.Services;
 using DNDGame.MauiApp.ViewModels;
 using DNDGame.MauiApp.Data;
+using DNDGame.MauiApp.Interfaces;
 using DNDGame.Core.Interfaces;
 using DNDGame.Application.Services;
 using Plugin.LocalNotification;
@@ -11,9 +12,9 @@ namespace DNDGame.MauiApp;
 
 public static class MauiProgram
 {
-    public static MauiApp CreateMauiApp()
+    public static Microsoft.Maui.Hosting.MauiApp CreateMauiApp()
     {
-        var builder = MauiApp.CreateBuilder();
+        var builder = Microsoft.Maui.Hosting.MauiApp.CreateBuilder();
         builder
             .UseMauiApp<App>()
             .UseLocalNotification()
@@ -37,10 +38,10 @@ public static class MauiProgram
         builder.Services.AddScoped<IDiceRoller, DiceRollerService>();
 
         // Platform Services
-        builder.Services.AddSingleton<INotificationService, NotificationService>();
-        builder.Services.AddSingleton<IFileService, FileService>();
-        builder.Services.AddSingleton<IConnectivityService, ConnectivityService>();
-        builder.Services.AddSingleton<IOfflineSyncService, OfflineSyncService>();
+        builder.Services.AddSingleton<Interfaces.INotificationService, NotificationService>();
+        builder.Services.AddSingleton<Interfaces.IFileService, FileService>();
+        builder.Services.AddSingleton<Interfaces.IConnectivityService, ConnectivityService>();
+        builder.Services.AddSingleton<Interfaces.IOfflineSyncService, OfflineSyncService>();
 
         // ViewModels
         builder.Services.AddTransient<MainViewModel>();

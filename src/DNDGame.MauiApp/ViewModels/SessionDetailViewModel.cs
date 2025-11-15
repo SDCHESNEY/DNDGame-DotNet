@@ -72,8 +72,8 @@ public partial class SessionDetailViewModel : ObservableObject, IQueryAttributab
 
         try
         {
-            var sessionData = await _sessionService.GetSessionByIdAsync(_sessionId);
-            Session = sessionData as Session;
+            var sessionData = await _sessionService.GetSessionAsync(_sessionId);
+            Session = sessionData;
 
             if (Session != null)
             {
@@ -102,8 +102,9 @@ public partial class SessionDetailViewModel : ObservableObject, IQueryAttributab
             var message = new Message
             {
                 SessionId = Session.Id,
+                AuthorId = "player-1", // In a real app, this would be the current user ID
                 Content = MessageText,
-                Role = MessageRole.User,
+                Role = MessageRole.Player,
                 Timestamp = DateTime.UtcNow
             };
 
@@ -145,11 +146,14 @@ public partial class SessionDetailViewModel : ObservableObject, IQueryAttributab
 
         try
         {
-            var confirm = await Microsoft.Maui.Controls.Application.Current?.MainPage!.DisplayAlert(
+            if (Microsoft.Maui.Controls.Application.Current?.MainPage == null)
+                return;
+
+            var confirm = await Microsoft.Maui.Controls.Application.Current.MainPage.DisplayAlert(
                 "End Session",
                 "Are you sure you want to end this session?",
                 "Yes",
-                "No") ?? false;
+                "No");
 
             if (!confirm)
                 return;

@@ -3,7 +3,7 @@
 namespace DNDGame.MauiApp;
 
 [Register("AppDelegate")]
-public class AppDelegate : MauiUIApplicationDelegate
+public class AppDelegate : Microsoft.Maui.MauiUIApplicationDelegate
 {
-	protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+	protected override Microsoft.Maui.Hosting.MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
 }

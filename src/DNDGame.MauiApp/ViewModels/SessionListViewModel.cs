@@ -106,11 +106,14 @@ public partial class SessionListViewModel : ObservableObject
     {
         try
         {
-            var confirm = await Microsoft.Maui.Controls.Application.Current?.MainPage!.DisplayAlert(
+            if (Microsoft.Maui.Controls.Application.Current?.MainPage == null)
+                return;
+
+            var confirm = await Microsoft.Maui.Controls.Application.Current.MainPage.DisplayAlert(
                 "Delete Session",
                 "Are you sure you want to delete this session?",
                 "Yes",
-                "No") ?? false;
+                "No");
 
             if (!confirm)
                 return;

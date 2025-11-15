@@ -146,10 +146,7 @@ public partial class SessionDetailViewModel : ObservableObject, IQueryAttributab
 
         try
         {
-            if (Microsoft.Maui.Controls.Application.Current?.MainPage == null)
-                return;
-
-            var confirm = await Microsoft.Maui.Controls.Application.Current.MainPage.DisplayAlert(
+            var confirm = await Shell.Current.DisplayAlert(
                 "End Session",
                 "Are you sure you want to end this session?",
                 "Yes",

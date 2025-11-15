@@ -20,6 +20,9 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <EnableDefaultCssItems>false</EnableDefaultCssItems>
         <Nullable>enable</Nullable>
+        
+        <!-- Enable compiled bindings with Source property (RelativeSource) -->
+        <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
         <!-- Display name -->
         <ApplicationTitle>DND Game</ApplicationTitle>

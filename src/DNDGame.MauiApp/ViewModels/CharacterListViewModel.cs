@@ -122,7 +122,7 @@ public partial class CharacterListViewModel : ObservableObject
 
         try
         {
-            var confirmed = await Microsoft.Maui.Controls.Application.Current!.MainPage!.DisplayAlert(
+            var confirmed = await Shell.Current.DisplayAlert(
                 "Delete Character",
                 $"Are you sure you want to delete {character.Name}? This action cannot be undone.",
                 "Delete",

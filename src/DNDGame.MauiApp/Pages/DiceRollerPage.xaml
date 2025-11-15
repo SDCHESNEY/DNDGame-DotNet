@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:DNDGame.MauiApp.ViewModels"
+             xmlns:core="clr-namespace:DNDGame.Core.Models;assembly=DNDGame.Core"
              x:Class="DNDGame.MauiApp.Pages.DiceRollerPage"
              x:DataType="viewmodels:DiceRollerViewModel"
              Title="Dice Roller">
@@ -33,7 +34,7 @@
         <!-- Roll History -->
         <CollectionView Grid.Row="2" ItemsSource="{Binding RollHistory}" Margin="20,10">
             <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="core:DiceRollResult">
                     <Frame Margin="0,5" Padding="15" BorderColor="{StaticResource Gray200}">
                         <Grid ColumnDefinitions="*,Auto">
                             <VerticalStackLayout Grid.Column="0" Spacing="5">

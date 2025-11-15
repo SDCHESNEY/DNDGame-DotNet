@@ -2,13 +2,14 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:viewmodels="clr-namespace:DNDGame.MauiApp.ViewModels"
+             xmlns:entities="clr-namespace:DNDGame.Core.Entities;assembly=DNDGame.Core"
              x:Class="DNDGame.MauiApp.Pages.SessionListPage"
              x:DataType="viewmodels:SessionListViewModel"
              Title="Sessions">
     <Grid RowDefinitions="*,Auto">
         <CollectionView Grid.Row="0" ItemsSource="{Binding Sessions}" Margin="10">
             <CollectionView.ItemTemplate>
-                <DataTemplate>
+                <DataTemplate x:DataType="entities:Session">
                     <Frame Margin="0,5" Padding="15" BorderColor="{StaticResource Gray200}">
                         <Grid ColumnDefinitions="*,Auto">
                             <VerticalStackLayout Grid.Column="0" Spacing="5">

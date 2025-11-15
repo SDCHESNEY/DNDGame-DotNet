@@ -57,8 +57,8 @@ public class PresenceService : IPresenceService
         
         if (_cache.TryGetValue<dynamic>(connectionKey, out var connectionData))
         {
-            var sessionId = (int)connectionData.SessionId;
-            var playerId = (int)connectionData.PlayerId;
+            var sessionId = (int)connectionData!.SessionId;
+            var playerId = (int)connectionData!.PlayerId;
             
             // Remove from session players
             var sessionKey = $"{SessionPlayersPrefix}{sessionId}";
@@ -119,7 +119,7 @@ public class PresenceService : IPresenceService
         
         if (_cache.TryGetValue<dynamic>(connectionKey, out var connectionData))
         {
-            return Task.FromResult<int?>((int)connectionData.SessionId);
+            return Task.FromResult<int?>((int)connectionData!.SessionId);
         }
         
         return Task.FromResult<int?>(null);

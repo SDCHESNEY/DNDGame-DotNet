@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="DNDGame.MauiApp.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:DNDGame.MauiApp.Pages"
+    Shell.FlyoutBehavior="Flyout"
+    Title="DND Game">
+
+    <Shell.FlyoutHeader>
+        <Grid BackgroundColor="{StaticResource Primary}" HeightRequest="200" Padding="20">
+            <VerticalStackLayout VerticalOptions="Center">
+                <Label Text="🎲 DND Game"
+                       FontSize="32"
+                       FontAttributes="Bold"
+                       TextColor="White"
+                       HorizontalOptions="Center"/>
+                <Label Text="Mobile Adventure Companion"
+                       FontSize="14"
+                       TextColor="White"
+                       Opacity="0.8"
+                       HorizontalOptions="Center"
+                       Margin="0,5,0,0"/>
+            </VerticalStackLayout>
+        </Grid>
+    </Shell.FlyoutHeader>
+
+    <FlyoutItem Title="Home" Icon="home.png">
+        <ShellContent Route="main"
+                      ContentTemplate="{DataTemplate pages:MainPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Characters" Icon="character.png">
+        <ShellContent Route="characters"
+                      ContentTemplate="{DataTemplate pages:CharacterListPage}" />
+    </FlyoutItem>
+
+    <FlyoutItem Title="Dice Roller" Icon="dice.png">
+        <ShellContent Route="dice"
+                      ContentTemplate="{DataTemplate pages:DiceRollerPage}" />
+    </FlyoutItem>
+
+    <Shell.FlyoutFooter>
+        <Grid BackgroundColor="{StaticResource Gray100}" HeightRequest="50" Padding="10">
+            <Label Text="Version 1.0.0"
+                   FontSize="12"
+                   TextColor="{StaticResource Gray600}"
+                   VerticalOptions="Center"
+                   HorizontalOptions="Center"/>
+        </Grid>
+    </Shell.FlyoutFooter>
+
+</Shell>

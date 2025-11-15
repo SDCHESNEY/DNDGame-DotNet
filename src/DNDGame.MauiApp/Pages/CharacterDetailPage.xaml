@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DNDGame.MauiApp.ViewModels"
+             x:Class="DNDGame.MauiApp.Pages.CharacterDetailPage"
+             x:DataType="viewmodels:CharacterDetailViewModel"
+             Title="Character Details">
+    
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            
+            <!-- Loading Indicator -->
+            <ActivityIndicator IsRunning="{Binding IsLoading}"
+                             IsVisible="{Binding IsLoading}"
+                             Color="{StaticResource Primary}"
+                             WidthRequest="50"
+                             HeightRequest="50"/>
+
+            <!-- Character Content -->
+            <VerticalStackLayout IsVisible="{Binding Character, Converter={StaticResource IsNotNullConverter}}" Spacing="15">
+                
+                <!-- Character Name -->
+                <Frame BorderColor="{StaticResource Primary}" Padding="15">
+                    <Label Text="{Binding Character.Name}"
+                           FontSize="28"
+                           FontAttributes="Bold"
+                           HorizontalOptions="Center"/>
+                </Frame>
+
+                <!-- Character Stats -->
+                <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="10">
+                    <Frame Grid.Row="0" Grid.Column="0" Padding="10">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Class" FontSize="12" TextColor="{StaticResource Gray600}"/>
+                            <Label Text="{Binding Character.Class}" FontSize="18" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                    
+                    <Frame Grid.Row="0" Grid.Column="1" Padding="10">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="Level" FontSize="12" TextColor="{StaticResource Gray600}"/>
+                            <Label Text="{Binding Character.Level}" FontSize="18" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                    
+                    <Frame Grid.Row="1" Grid.Column="0" Padding="10">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="HP" FontSize="12" TextColor="{StaticResource Gray600}"/>
+                            <Label Text="{Binding Character.HitPoints, StringFormat='{0}/{1}'}" FontSize="18" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                    
+                    <Frame Grid.Row="1" Grid.Column="1" Padding="10">
+                        <VerticalStackLayout Spacing="5">
+                            <Label Text="AC" FontSize="12" TextColor="{StaticResource Gray600}"/>
+                            <Label Text="{Binding Character.ArmorClass}" FontSize="18" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Frame>
+                </Grid>
+
+                <!-- Action Buttons -->
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                    <Button Grid.Column="0"
+                            Text="Level Up"
+                            Command="{Binding LevelUpCommand}"
+                            BackgroundColor="{StaticResource Success}"/>
+                    <Button Grid.Column="1"
+                            Text="Rest"
+                            Command="{Binding RestoreHitPointsCommand}"
+                            BackgroundColor="{StaticResource Info}"/>
+                </Grid>
+
+                <Button Text="{Binding IsEditing, Converter={StaticResource BoolToEditTextConverter}}"
+                        Command="{Binding ToggleEditModeCommand}"
+                        BackgroundColor="{StaticResource Secondary}"/>
+
+                <Button Text="← Back"
+                        Command="{Binding GoBackCommand}"
+                        BackgroundColor="{StaticResource Gray500}"/>
+
+            </VerticalStackLayout>
+
+            <!-- Error Message -->
+            <Label Text="{Binding ErrorMessage}"
+                   IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}"
+                   TextColor="Red"
+                   FontSize="14"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

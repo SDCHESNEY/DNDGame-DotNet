@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary 
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:converters="clr-namespace:DNDGame.MauiApp.Converters">
+
+    <converters:IsNotNullConverter x:Key="IsNotNullConverter"/>
+    <converters:BoolToEditTextConverter x:Key="BoolToEditTextConverter"/>
+
+    <!-- Button Styles -->
+    <Style TargetType="Button">
+        <Setter Property="TextColor" Value="{StaticResource White}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Padding" Value="14,10"/>
+    </Style>
+
+    <!-- Entry Styles -->
+    <Style TargetType="Entry">
+        <Setter Property="TextColor" Value="{StaticResource Gray900}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource Gray100}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular"/>
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="PlaceholderColor" Value="{StaticResource Gray500}" />
+    </Style>
+
+    <!-- Label Styles -->
+    <Style TargetType="Label">
+        <Setter Property="TextColor" Value="{StaticResource Gray900}" />
+        <Setter Property="FontFamily" Value="OpenSansRegular" />
+        <Setter Property="FontSize" Value="14" />
+    </Style>
+
+    <!-- Frame Styles -->
+    <Style TargetType="Frame">
+        <Setter Property="HasShadow" Value="False" />
+        <Setter Property="BorderColor" Value="{StaticResource Gray200}" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="BackgroundColor" Value="{StaticResource White}" />
+    </Style>
+
+</ResourceDictionary>

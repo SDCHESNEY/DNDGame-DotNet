@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DNDGame.MauiApp.ViewModels"
+             x:Class="DNDGame.MauiApp.Pages.SessionDetailPage"
+             x:DataType="viewmodels:SessionDetailViewModel"
+             Title="{Binding Session.Title}">
+    <Grid RowDefinitions="*,Auto,Auto">
+        <ScrollView Grid.Row="0">
+            <VerticalStackLayout Padding="20" Spacing="15">
+                <Label Text="{Binding Session.Title}" FontSize="24" FontAttributes="Bold"/>
+                <Label Text="{Binding Session.State, StringFormat='Status: {0}'}" FontSize="16"/>
+                
+                <Label Text="Messages" FontSize="18" FontAttributes="Bold" Margin="0,20,0,10"/>
+                <CollectionView ItemsSource="{Binding Messages}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate>
+                            <Frame Margin="0,5" Padding="10">
+                                <VerticalStackLayout Spacing="5">
+                                    <Label Text="{Binding Content}" FontSize="14"/>
+                                    <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm}'}" FontSize="10" TextColor="{StaticResource Gray500}"/>
+                                </VerticalStackLayout>
+                            </Frame>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </ScrollView>
+        
+        <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Padding="10" ColumnSpacing="10">
+            <Entry Grid.Column="0" Placeholder="Type message..." Text="{Binding MessageText}"/>
+            <Button Grid.Column="1" Text="Send" Command="{Binding SendMessageCommand}"/>
+        </Grid>
+        
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10" Padding="10">
+            <Button Grid.Column="0" Text="Start" Command="{Binding StartSessionCommand}" BackgroundColor="{StaticResource Success}"/>
+            <Button Grid.Column="1" Text="End" Command="{Binding EndSessionCommand}" BackgroundColor="{StaticResource Danger}"/>
+        </Grid>
+    </Grid>
+</ContentPage>

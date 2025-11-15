@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DNDGame.MauiApp.ViewModels"
+             x:Class="DNDGame.MauiApp.Pages.CharacterListPage"
+             x:DataType="viewmodels:CharacterListViewModel"
+             Title="Characters">
+
+    <Grid RowDefinitions="Auto,*,Auto">
+        
+        <!-- Search Bar -->
+        <SearchBar Grid.Row="0"
+                   Placeholder="Search characters..."
+                   Text="{Binding SearchText}"
+                   SearchCommand="{Binding SearchCharactersCommand}"
+                   Margin="10"/>
+
+        <!-- Characters List -->
+        <RefreshView Grid.Row="1"
+                     Command="{Binding RefreshCharactersCommand}"
+                     IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Characters}"
+                          SelectionMode="Single"
+                          SelectedItem="{Binding SelectedCharacter}"
+                          SelectionChangedCommand="{Binding SelectCharacterCommand}"
+                          SelectionChangedCommandParameter="{Binding SelectedCharacter}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem Text="Delete"
+                                             BackgroundColor="Red"
+                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CharacterListViewModel}}, Path=DeleteCharacterCommand}"
+                                             CommandParameter="{Binding Id}"/>
+                                    <SwipeItem Text="Export"
+                                             BackgroundColor="Blue"
+                                             Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:CharacterListViewModel}}, Path=ExportCharacterCommand}"
+                                             CommandParameter="{Binding Id}"/>
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            
+                            <Frame Margin="10,5" Padding="15" BorderColor="{StaticResource Gray200}" HasShadow="True">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <VerticalStackLayout Grid.Column="0" Spacing="5">
+                                        <Label Text="{Binding Name}"
+                                             FontSize="18"
+                                             FontAttributes="Bold"/>
+                                        <Label Text="{Binding Class, StringFormat='Class: {0}'}"
+                                             FontSize="14"
+                                             TextColor="{StaticResource Gray600}"/>
+                                        <Label Text="{Binding Level, StringFormat='Level: {0}'}"
+                                             FontSize="14"
+                                             TextColor="{StaticResource Gray600}"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="1"
+                                         Text="→"
+                                         FontSize="24"
+                                         VerticalOptions="Center"
+                                         TextColor="{StaticResource Primary}"/>
+                                </Grid>
+                            </Frame>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+                
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
+                        <Label Text="📜"
+                             FontSize="64"
+                             HorizontalOptions="Center"/>
+                        <Label Text="No characters yet"
+                             FontSize="18"
+                             TextColor="{StaticResource Gray600}"
+                             HorizontalOptions="Center"/>
+                        <Label Text="Create your first character to begin your adventure!"
+                             FontSize="14"
+                             TextColor="{StaticResource Gray500}"
+                             HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- Loading Indicator -->
+        <ActivityIndicator Grid.Row="1"
+                         IsRunning="{Binding IsLoading}"
+                         IsVisible="{Binding IsLoading}"
+                         Color="{StaticResource Primary}"
+                         WidthRequest="50"
+                         HeightRequest="50"
+                         HorizontalOptions="Center"
+                         VerticalOptions="Center"/>
+
+        <!-- Error Message -->
+        <Label Grid.Row="1"
+               Text="{Binding ErrorMessage}"
+               IsVisible="{Binding ErrorMessage, Converter={StaticResource IsNotNullConverter}}"
+               TextColor="Red"
+               FontSize="14"
+               Padding="20"
+               HorizontalOptions="Center"
+               VerticalOptions="Center"/>
+
+        <!-- Add Character Button -->
+        <Button Grid.Row="2"
+                Text="+ Create Character"
+                Command="{Binding CreateCharacterCommand}"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                FontSize="16"
+                Margin="20"
+                CornerRadius="10"
+                HeightRequest="50"/>
+    </Grid>
+
+</ContentPage>

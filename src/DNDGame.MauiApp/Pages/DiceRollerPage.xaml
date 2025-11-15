@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:DNDGame.MauiApp.ViewModels"
+             x:Class="DNDGame.MauiApp.Pages.DiceRollerPage"
+             x:DataType="viewmodels:DiceRollerViewModel"
+             Title="Dice Roller">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        
+        <!-- Dice Formula Entry -->
+        <Frame Grid.Row="0" Margin="20,20,20,10" Padding="0" BorderColor="{StaticResource Primary}">
+            <Entry Placeholder="Enter formula (e.g., 2d20+5)"
+                   Text="{Binding Formula}"
+                   FontSize="18"
+                   HorizontalTextAlignment="Center"
+                   ReturnCommand="{Binding RollDiceCommand}"/>
+        </Frame>
+
+        <!-- Quick Dice Buttons -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" Margin="20,0">
+            <HorizontalStackLayout Spacing="10">
+                <Button Text="d4" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d4" WidthRequest="60" HeightRequest="60" CornerRadius="30"/>
+                <Button Text="d6" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d6" WidthRequest="60" HeightRequest="60" CornerRadius="30"/>
+                <Button Text="d8" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d8" WidthRequest="60" HeightRequest="60" CornerRadius="30"/>
+                <Button Text="d10" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d10" WidthRequest="60" HeightRequest="60" CornerRadius="30"/>
+                <Button Text="d12" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d12" WidthRequest="60" HeightRequest="60" CornerRadius="30"/>
+                <Button Text="d20" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d20" WidthRequest="60" HeightRequest="60" CornerRadius="30" BackgroundColor="{StaticResource Primary}"/>
+                <Button Text="d100" Command="{Binding SetQuickDiceCommand}" CommandParameter="1d100" WidthRequest="70" HeightRequest="60" CornerRadius="30"/>
+            </HorizontalStackLayout>
+        </ScrollView>
+
+        <!-- Roll History -->
+        <CollectionView Grid.Row="2" ItemsSource="{Binding RollHistory}" Margin="20,10">
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame Margin="0,5" Padding="15" BorderColor="{StaticResource Gray200}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0" Spacing="5">
+                                <Label Text="{Binding Formula}" FontSize="16" FontAttributes="Bold"/>
+                                <Label Text="{Binding IndividualRolls, StringFormat='Rolls: {0}'}" FontSize="12" TextColor="{StaticResource Gray600}"/>
+                                <Label Text="{Binding Timestamp, StringFormat='{0:HH:mm:ss}'}" FontSize="10" TextColor="{StaticResource Gray500}"/>
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1" Text="{Binding Total}" FontSize="32" FontAttributes="Bold" VerticalOptions="Center" TextColor="{StaticResource Primary}"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
+                    <Label Text="🎲" FontSize="64" HorizontalOptions="Center"/>
+                    <Label Text="No rolls yet" FontSize="18" TextColor="{StaticResource Gray600}" HorizontalOptions="Center"/>
+                    <Label Text="Enter a formula and roll some dice!" FontSize="14" TextColor="{StaticResource Gray500}" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+        </CollectionView>
+
+        <!-- Roll Buttons -->
+        <Grid Grid.Row="3" ColumnDefinitions="*,*,*" ColumnSpacing="10" Margin="20" RowSpacing="10">
+            <Button Grid.Column="0" Text="Disadvantage" Command="{Binding RollWithDisadvantageCommand}" BackgroundColor="{StaticResource Danger}" TextColor="White" HeightRequest="50" CornerRadius="10"/>
+            <Button Grid.Column="1" Text="🎲 ROLL" Command="{Binding RollDiceCommand}" BackgroundColor="{StaticResource Primary}" TextColor="White" FontSize="18" FontAttributes="Bold" HeightRequest="50" CornerRadius="10"/>
+            <Button Grid.Column="2" Text="Advantage" Command="{Binding RollWithAdvantageCommand}" BackgroundColor="{StaticResource Success}" TextColor="White" HeightRequest="50" CornerRadius="10"/>
+        </Grid>
+
+        <!-- Loading Overlay -->
+        <Frame Grid.RowSpan="4" IsVisible="{Binding IsRolling}" BackgroundColor="#80000000" Padding="0" BorderColor="Transparent">
+            <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="20">
+                <Label Text="🎲" FontSize="100" HorizontalOptions="Center"/>
+                <ActivityIndicator IsRunning="True" Color="White" WidthRequest="50" HeightRequest="50"/>
+                <Label Text="Rolling..." FontSize="24" TextColor="White" HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+        </Frame>
+
+    </Grid>
+
+</ContentPage>

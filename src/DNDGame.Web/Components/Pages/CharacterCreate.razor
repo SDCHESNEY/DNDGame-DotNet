@@ -1,0 +1,170 @@
+@page "/characters/create"
+@using DNDGame.Core.Interfaces
+@using DNDGame.Core.Enums
+@using DNDGame.Application.DTOs
+@using DNDGame.Core.ValueObjects
+@using DNDGame.Web.Models
+@inject ICharacterService CharacterService
+@inject NavigationManager Navigation
+
+<h3>Create New Character</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+<EditForm Model="@formModel" OnValidSubmit="@HandleValidSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="row">
+        <div class="col-md-6 mb-3">
+            <label for="name" class="form-label">Character Name</label>
+            <InputText id="name" class="form-control" @bind-Value="formModel.Name" />
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label for="class" class="form-label">Class</label>
+            <InputSelect id="class" class="form-control" @bind-Value="formModel.Class">
+                <option value="Barbarian">Barbarian</option>
+                <option value="Bard">Bard</option>
+                <option value="Cleric">Cleric</option>
+                <option value="Druid">Druid</option>
+                <option value="Fighter">Fighter</option>
+                <option value="Monk">Monk</option>
+                <option value="Paladin">Paladin</option>
+                <option value="Ranger">Ranger</option>
+                <option value="Rogue">Rogue</option>
+                <option value="Sorcerer">Sorcerer</option>
+                <option value="Warlock">Warlock</option>
+                <option value="Wizard">Wizard</option>
+            </InputSelect>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label for="level" class="form-label">Level</label>
+            <InputNumber id="level" class="form-control" @bind-Value="formModel.Level" />
+        </div>
+    </div>
+
+    <h4 class="mt-4">Ability Scores</h4>
+    <div class="row">
+        <div class="col-md-2 mb-3">
+            <label for="strength" class="form-label">Strength</label>
+            <InputNumber id="strength" class="form-control" @bind-Value="formModel.Strength" />
+            <small class="text-muted">Modifier: @GetModifier(formModel.Strength)</small>
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label for="dexterity" class="form-label">Dexterity</label>
+            <InputNumber id="dexterity" class="form-control" @bind-Value="formModel.Dexterity" />
+            <small class="text-muted">Modifier: @GetModifier(formModel.Dexterity)</small>
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label for="constitution" class="form-label">Constitution</label>
+            <InputNumber id="constitution" class="form-control" @bind-Value="formModel.Constitution" />
+            <small class="text-muted">Modifier: @GetModifier(formModel.Constitution)</small>
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label for="intelligence" class="form-label">Intelligence</label>
+            <InputNumber id="intelligence" class="form-control" @bind-Value="formModel.Intelligence" />
+            <small class="text-muted">Modifier: @GetModifier(formModel.Intelligence)</small>
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label for="wisdom" class="form-label">Wisdom</label>
+            <InputNumber id="wisdom" class="form-control" @bind-Value="formModel.Wisdom" />
+            <small class="text-muted">Modifier: @GetModifier(formModel.Wisdom)</small>
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label for="charisma" class="form-label">Charisma</label>
+            <InputNumber id="charisma" class="form-control" @bind-Value="formModel.Charisma" />
+            <small class="text-muted">Modifier: @GetModifier(formModel.Charisma)</small>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+            @if (isSubmitting)
+            {
+                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                <span>Creating...</span>
+            }
+            else
+            {
+                <span>Create Character</span>
+            }
+        </button>
+        <button type="button" class="btn btn-secondary ms-2" @onclick="@(() => Navigation.NavigateTo("/characters"))">
+            Cancel
+        </button>
+    </div>
+</EditForm>
+
+@code {
+    private CharacterFormModel formModel = new();
+    private bool isSubmitting = false;
+    private string? errorMessage;
+
+    private async Task HandleValidSubmit()
+    {
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            var abilityScores = new AbilityScores(
+                formModel.Strength,
+                formModel.Dexterity,
+                formModel.Constitution,
+                formModel.Intelligence,
+                formModel.Wisdom,
+                formModel.Charisma
+            );
+
+            var maxHp = formModel.Level * 10 + abilityScores.ConstitutionModifier;
+            var armorClass = 10 + abilityScores.DexterityModifier;
+
+            var request = new CreateCharacterRequest(
+                PlayerId: formModel.PlayerId,
+                Name: formModel.Name,
+                Class: Enum.Parse<CharacterClass>(formModel.Class),
+                Level: formModel.Level,
+                AbilityScores: abilityScores,
+                MaxHitPoints: maxHp,
+                ArmorClass: armorClass
+            );
+
+            var result = await CharacterService.CreateCharacterAsync(formModel.PlayerId, request);
+            
+            if (result != null)
+            {
+                Navigation.NavigateTo("/characters");
+            }
+            else
+            {
+                errorMessage = "Failed to create character. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error creating character: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private string GetModifier(int abilityScore)
+    {
+        int modifier = (abilityScore - 10) / 2;
+        return modifier >= 0 ? $"+{modifier}" : modifier.ToString();
+    }
+}

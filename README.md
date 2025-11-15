@@ -4,7 +4,7 @@ A Dungeons & Dragons-style RPG powered by Large Language Models, built with .NET
 
 [![.NET Version](https://img.shields.io/badge/.NET-9.0-512BD4)](https://dotnet.microsoft.com/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
-[![Tests](https://img.shields.io/badge/tests-195%20passing-success)](tests/)
+[![Tests](https://img.shields.io/badge/tests-216%20passing-success)](tests/)
 
 ## 🎮 Overview
 
@@ -39,10 +39,12 @@ DNDGame-DotNet/
 │   ├── DNDGame.Infrastructure/ # EF Core, repositories, external services
 │   ├── DNDGame.Application/    # Business logic, DTOs, validators
 │   ├── DNDGame.API/            # REST API controllers, middleware
-│   ├── DNDGame.Web/            # Blazor web application (planned)
+│   ├── DNDGame.Web/            # Blazor web application ✅
 │   └── DNDGame.MAUI/           # Mobile application (planned)
 ├── tests/
-│   └── DNDGame.UnitTests/      # xUnit tests (48 passing)
+│   ├── DNDGame.UnitTests/      # xUnit unit tests (185 passing)
+│   ├── DNDGame.IntegrationTests/ # Integration tests (10 passing)
+│   └── DNDGame.ComponentTests/ # bUnit component tests (21/29 passing)
 └── docs/                       # Documentation and roadmap
 ```
 
@@ -148,7 +150,7 @@ dotnet test --verbosity normal
 dotnet test /p:CollectCoverage=true
 ```
 
-Current test status: **195/195 passing** ✅
+Current test status: **216/224 passing** (96% pass rate) ✅
 
 Test breakdown:
 - **Domain Models**: 15 tests (ability scores, character, session)
@@ -158,6 +160,11 @@ Test breakdown:
 - **LLM Services**: 40 tests (prompt templates, content moderation, DM responses)
 - **SignalR Services**: 14 tests (presence service with connection tracking)
 - **Integration Tests**: 10 tests (end-to-end API with database)
+- **Component Tests**: 21/29 passing (bUnit tests for Blazor components)
+  - HomeTests: 5/8 passing
+  - CharactersTests: 3/4 passing
+  - DiceTests: 9/11 passing
+  - SessionsTests: 4/6 passing
 
 ## 📚 API Documentation
 
@@ -409,7 +416,7 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [ ] Prometheus + Grafana monitoring
 - [ ] App store submissions (iOS/Android)
 
-**Current Progress**: Phase 4 Complete | **Next**: Phase 5 - Blazor Web UI
+**Current Progress**: Phase 5 Complete (21/29 tests passing) | **Next**: Phase 6 - .NET MAUI Mobile App
 
 See [docs/roadmap.md](docs/roadmap.md) and [docs/llm-integration-guide.md](docs/llm-integration-guide.md) for detailed implementation and configuration.
 

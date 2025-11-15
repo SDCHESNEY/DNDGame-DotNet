@@ -1,0 +1,134 @@
+@page "/sessions"
+@using DNDGame.Core.Entities
+@using DNDGame.Core.Interfaces
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+
+<PageTitle>Sessions - DND Game</PageTitle>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Game Sessions</h1>
+    <button class="btn btn-primary" @onclick="CreateSession">
+        <span class="bi bi-plus-circle"></span> Create New Session
+    </button>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p>Loading sessions...</p>
+    </div>
+}
+else if (errorMessage is not null)
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+else if (!sessions.Any())
+{
+    <div class="alert alert-info">
+        <h4>No sessions yet!</h4>
+        <p>Create your first session to start your adventure.</p>
+        <button class="btn btn-primary" @onclick="CreateSession">Create Session</button>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var session in sessions)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="card session-card h-100" @onclick="() => JoinSession(session.Id)">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title">Session #@session.Id</h5>
+                            <span class="badge bg-@GetStateBadgeColor(session.State)">@session.State</span>
+                        </div>
+                        
+                        <p class="text-muted mb-2">
+                            <small>
+                                <span class="bi bi-@(session.Mode == DNDGame.Core.Enums.SessionMode.Solo ? "person" : "people")"></span>
+                                @session.Mode Mode
+                            </small>
+                        </p>
+
+                        @if (!string.IsNullOrEmpty(session.CurrentScene))
+                        {
+                            <p class="card-text small">
+                                <strong>Scene:</strong> @session.CurrentScene
+                            </p>
+                        }
+
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <small class="text-muted">
+                                Updated @(session.LastActivityAt?.ToLocalTime().ToString("g") ?? "Never")
+                            </small>
+                            <button class="btn btn-sm btn-primary" @onclick:stopPropagation="true" @onclick="() => JoinSession(session.Id)">
+                                Join
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<Session> sessions = new();
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSessions();
+    }
+
+    private async Task LoadSessions()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await SessionService.GetAllSessionsAsync();
+            sessions = result.Cast<Session>().ToList();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load sessions: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void CreateSession()
+    {
+        Navigation.NavigateTo("/sessions/create");
+    }
+
+    private void JoinSession(int id)
+    {
+        Navigation.NavigateTo($"/sessions/{id}");
+    }
+
+    private string GetStateBadgeColor(DNDGame.Core.Enums.SessionState state)
+    {
+        return state switch
+        {
+            DNDGame.Core.Enums.SessionState.Created => "secondary",
+            DNDGame.Core.Enums.SessionState.WaitingForPlayers => "warning",
+            DNDGame.Core.Enums.SessionState.InProgress => "success",
+            DNDGame.Core.Enums.SessionState.Paused => "info",
+            DNDGame.Core.Enums.SessionState.Completed => "dark",
+            DNDGame.Core.Enums.SessionState.Abandoned => "danger",
+            _ => "secondary"
+        };
+    }
+}

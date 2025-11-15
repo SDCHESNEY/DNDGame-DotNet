@@ -1,0 +1,215 @@
+@page "/characters/{Id:int}"
+@using DNDGame.Core.Entities
+@using DNDGame.Core.Interfaces
+@using Microsoft.JSInterop
+@inject ICharacterService CharacterService
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+@if (isLoading)
+{
+    <div class="text-center my-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (character is null)
+{
+    <div class="alert alert-warning" role="alert">
+        Character not found.
+    </div>
+}
+else
+{
+    <div class="character-detail">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>@character.Name</h2>
+            <div>
+                <button class="btn btn-outline-secondary me-2" @onclick="@(() => Navigation.NavigateTo("/characters"))">
+                    Back to Characters
+                </button>
+                <button class="btn btn-outline-danger" @onclick="DeleteCharacterAsync">
+                    Delete
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Character Info Card -->
+            <div class="col-md-4 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Character Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Class:</strong> @character.Class</p>
+                        <p><strong>Level:</strong> @character.Level</p>
+                        <p><strong>Proficiency Bonus:</strong> +@character.ProficiencyBonus</p>
+                        <p><strong>Hit Points:</strong> @character.HitPoints / @character.MaxHitPoints</p>
+                        <p><strong>Armor Class:</strong> @character.ArmorClass</p>
+                        <p><strong>Speed:</strong> 30 ft</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ability Scores Card -->
+            <div class="col-md-8 mb-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Ability Scores</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col-4 col-md-2 mb-3">
+                                <div class="ability-score">
+                                    <div class="ability-name">STR</div>
+                                    <div class="ability-value">@character.AbilityScores.Strength</div>
+                                    <div class="ability-modifier">@GetModifierDisplay(character.AbilityScores.StrengthModifier)</div>
+                                </div>
+                            </div>
+                            <div class="col-4 col-md-2 mb-3">
+                                <div class="ability-score">
+                                    <div class="ability-name">DEX</div>
+                                    <div class="ability-value">@character.AbilityScores.Dexterity</div>
+                                    <div class="ability-modifier">@GetModifierDisplay(character.AbilityScores.DexterityModifier)</div>
+                                </div>
+                            </div>
+                            <div class="col-4 col-md-2 mb-3">
+                                <div class="ability-score">
+                                    <div class="ability-name">CON</div>
+                                    <div class="ability-value">@character.AbilityScores.Constitution</div>
+                                    <div class="ability-modifier">@GetModifierDisplay(character.AbilityScores.ConstitutionModifier)</div>
+                                </div>
+                            </div>
+                            <div class="col-4 col-md-2 mb-3">
+                                <div class="ability-score">
+                                    <div class="ability-name">INT</div>
+                                    <div class="ability-value">@character.AbilityScores.Intelligence</div>
+                                    <div class="ability-modifier">@GetModifierDisplay(character.AbilityScores.IntelligenceModifier)</div>
+                                </div>
+                            </div>
+                            <div class="col-4 col-md-2 mb-3">
+                                <div class="ability-score">
+                                    <div class="ability-name">WIS</div>
+                                    <div class="ability-value">@character.AbilityScores.Wisdom</div>
+                                    <div class="ability-modifier">@GetModifierDisplay(character.AbilityScores.WisdomModifier)</div>
+                                </div>
+                            </div>
+                            <div class="col-4 col-md-2 mb-3">
+                                <div class="ability-score">
+                                    <div class="ability-name">CHA</div>
+                                    <div class="ability-value">@character.AbilityScores.Charisma</div>
+                                    <div class="ability-modifier">@GetModifierDisplay(character.AbilityScores.CharismaModifier)</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Skills Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Skills</h5>
+            </div>
+            <div class="card-body">
+                @if (character.Skills.Any())
+                {
+                    <div class="row">
+                        @foreach (var skill in character.Skills)
+                        {
+                            <div class="col-md-4 mb-2">
+                                <span class="badge bg-secondary me-2">@skill</span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No skills available</p>
+                }
+            </div>
+        </div>
+
+        <!-- Inventory Card -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Inventory</h5>
+            </div>
+            <div class="card-body">
+                @if (character.Inventory.Any())
+                {
+                    <ul class="list-group">
+                        @foreach (var item in character.Inventory)
+                        {
+                            <li class="list-group-item">@item</li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <p class="text-muted">No items in inventory</p>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Character? character;
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCharacterAsync();
+    }
+
+    private async Task LoadCharacterAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await CharacterService.GetCharacterAsync(Id);
+            character = result as Character;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading character: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task DeleteCharacterAsync()
+    {
+        if (character is null) return;
+
+        var confirmed = await JSRuntime.InvokeAsync<bool>("confirm", 
+            $"Are you sure you want to delete {character.Name}?");
+        
+        if (confirmed)
+        {
+            try
+            {
+                await CharacterService.DeleteCharacterAsync(Id);
+                Navigation.NavigateTo("/characters");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting character: {ex.Message}");
+            }
+        }
+    }
+
+    private string GetModifierDisplay(int modifier)
+    {
+        return modifier >= 0 ? $"+{modifier}" : modifier.ToString();
+    }
+}

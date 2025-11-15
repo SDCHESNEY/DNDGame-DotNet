@@ -1,0 +1,409 @@
+/* DNDGame Custom Styles */
+
+:root {
+    --primary-color: #8b5cf6;
+    --secondary-color: #ec4899;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+    --dark-bg: #1f2937;
+    --darker-bg: #111827;
+    --light-text: #f3f4f6;
+    --border-color: #374151;
+}
+
+/* Dark Mode Theme */
+body.dark-mode {
+    background-color: var(--darker-bg);
+    color: var(--light-text);
+}
+
+body.dark-mode .card {
+    background-color: var(--dark-bg);
+    border-color: var(--border-color);
+    color: var(--light-text);
+}
+
+body.dark-mode .card-header {
+    background-color: var(--darker-bg);
+    border-color: var(--border-color);
+    color: var(--light-text);
+}
+
+body.dark-mode .list-group-item {
+    background-color: var(--dark-bg);
+    border-color: var(--border-color);
+    color: var(--light-text);
+}
+
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+    background-color: var(--darker-bg);
+    border-color: var(--border-color);
+    color: var(--light-text);
+}
+
+body.dark-mode .form-control:focus,
+body.dark-mode .form-select:focus {
+    background-color: var(--darker-bg);
+    border-color: var(--primary-color);
+    color: var(--light-text);
+    box-shadow: 0 0 0 0.25rem rgba(139, 92, 246, 0.25);
+}
+
+/* Character Sheet */
+.character-sheet {
+    padding: 1rem;
+}
+
+.ability-score {
+    padding: 1rem;
+    background: var(--dark-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.ability-score:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(139, 92, 246, 0.3);
+}
+
+.ability-name {
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--warning-color);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ability-value {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0.5rem 0;
+    color: var(--light-text);
+}
+
+.ability-modifier {
+    font-size: 1rem;
+    color: var(--info-color);
+    font-weight: 600;
+}
+
+/* Character Cards */
+.character-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+}
+
+.character-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);
+    border-color: var(--primary-color);
+}
+
+.character-stats {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.stat-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    background: var(--darker-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 9999px;
+    font-size: 0.875rem;
+}
+
+/* Dice Roller */
+.dice-roller {
+    padding: 1rem;
+}
+
+.dice-button {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    color: white;
+}
+
+.dice-button:hover {
+    transform: scale(1.05) rotate(5deg);
+    box-shadow: 0 8px 16px rgba(139, 92, 246, 0.5);
+}
+
+.roll-result {
+    padding: 2rem;
+    margin: 1rem 0;
+    border-radius: 12px;
+    text-align: center;
+    background: var(--dark-bg);
+    border: 3px solid var(--border-color);
+    animation: rollIn 0.5s ease;
+}
+
+@keyframes rollIn {
+    from {
+        transform: scale(0) rotate(360deg);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+.roll-result.critical {
+    border-color: var(--success-color);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1));
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+}
+
+.roll-result.fumble {
+    border-color: var(--danger-color);
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+}
+
+.roll-total {
+    font-size: 4rem;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.roll-formula {
+    font-size: 1.25rem;
+    color: var(--info-color);
+    margin-bottom: 0.25rem;
+}
+
+.roll-breakdown {
+    font-size: 1rem;
+    color: var(--light-text);
+    opacity: 0.8;
+}
+
+/* Chat Panel */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.message {
+    padding: 1rem;
+    border-radius: 8px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.dm-message {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+    border-left: 4px solid var(--primary-color);
+    margin-right: 2rem;
+}
+
+.player-message {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+    border-left: 4px solid var(--info-color);
+    margin-left: 2rem;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+.message-content {
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+/* Session Cards */
+.session-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+}
+
+.session-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(139, 92, 246, 0.4);
+    border-color: var(--primary-color);
+}
+
+.session-state-badge {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+}
+
+/* Initiative Tracker */
+.initiative-tracker {
+    padding: 1rem;
+}
+
+.initiative-entry {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: var(--dark-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.initiative-entry.current-turn {
+    border-color: var(--warning-color);
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.initiative-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--warning-color);
+    min-width: 3rem;
+    text-align: center;
+}
+
+.character-name {
+    flex: 1;
+    font-weight: 600;
+}
+
+.hp-indicator {
+    font-size: 0.875rem;
+    color: var(--info-color);
+}
+
+.condition-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    margin-right: 0.25rem;
+    background: var(--danger-color);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    color: var(--primary-color);
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.4);
+}
+
+.btn-outline-primary {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .ability-value {
+        font-size: 1.5rem;
+    }
+
+    .roll-total {
+        font-size: 3rem;
+    }
+
+    .character-card,
+    .session-card {
+        margin-bottom: 1rem;
+    }
+
+    .dm-message,
+    .player-message {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+@media (max-width: 576px) {
+    .ability-score {
+        padding: 0.75rem;
+    }
+
+    .stat-badge {
+        font-size: 0.75rem;
+    }
+
+    .roll-total {
+        font-size: 2.5rem;
+    }
+}
+
+/* Utility Classes */
+.text-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.card-glow {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+.hover-lift {
+    transition: transform 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+}

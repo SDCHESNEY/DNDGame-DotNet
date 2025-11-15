@@ -1,0 +1,287 @@
+@page "/sessions/{Id:int}"
+@using DNDGame.Core.Entities
+@using DNDGame.Core.Interfaces
+@using DNDGame.Core.Enums
+@using Microsoft.AspNetCore.SignalR.Client
+@inject ISessionService SessionService
+@inject NavigationManager Navigation
+@implements IAsyncDisposable
+
+@if (isLoading)
+{
+    <div class="text-center my-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (session is null)
+{
+    <div class="alert alert-warning" role="alert">
+        Session not found.
+    </div>
+}
+else
+{
+    <div class="session-detail">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2>Session #@session.Id</h2>
+                <span class="badge @GetStateBadgeClass(session.State)">@session.State</span>
+                <span class="badge bg-info ms-2">@session.Mode</span>
+            </div>
+            <div>
+                <button class="btn btn-outline-secondary" @onclick="@(() => Navigation.NavigateTo("/sessions"))">
+                    Back to Sessions
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <!-- Chat Panel -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Chat</h5>
+                        <span class="badge @(isConnected ? "bg-success" : "bg-danger")">
+                            @(isConnected ? "Connected" : "Disconnected")
+                        </span>
+                    </div>
+                    <div class="card-body chat-container" style="height: 400px; overflow-y: auto;" @ref="chatContainer">
+                        @foreach (var message in messages)
+                        {
+                            <div class="message mb-3 @(message.Role == MessageRole.DungeonMaster ? "dm-message" : "player-message")">
+                                <div class="message-header">
+                                    <strong>@GetRoleName(message.Role)</strong>
+                                    <small class="text-muted ms-2">@message.Timestamp.ToString("HH:mm")</small>
+                                </div>
+                                <div class="message-content">
+                                    @message.Content
+                                </div>
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer">
+                        <div class="input-group">
+                            <textarea class="form-control" 
+                                      placeholder="Describe your action..." 
+                                      @bind="currentMessage"
+                                      @onkeydown="HandleKeyDown"
+                                      rows="2"></textarea>
+                            <button class="btn btn-primary" @onclick="SendMessageAsync" disabled="@(!isConnected || string.IsNullOrWhiteSpace(currentMessage))">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Info Sidebar -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Session Info</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Current Scene:</strong> @session.CurrentScene</p>
+                        <p><strong>Created:</strong> @session.CreatedAt.ToString("g")</p>
+                        <p><strong>Last Activity:</strong> @(session.LastActivityAt?.ToString("g") ?? "Never")</p>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5>Quick Dice</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-outline-primary btn-sm" @onclick="@(() => RollDiceAsync("1d20"))">d20</button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="@(() => RollDiceAsync("1d12"))">d12</button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="@(() => RollDiceAsync("1d10"))">d10</button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="@(() => RollDiceAsync("1d8"))">d8</button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="@(() => RollDiceAsync("1d6"))">d6</button>
+                            <button class="btn btn-outline-primary btn-sm" @onclick="@(() => RollDiceAsync("1d4"))">d4</button>
+                        </div>
+                    </div>
+                </div>
+
+                @if (lastDiceRoll is not null)
+                {
+                    <div class="card">
+                        <div class="card-header">
+                            <h6>Last Roll</h6>
+                        </div>
+                        <div class="card-body text-center">
+                            <h3 class="@(lastDiceRoll.Total == 20 && lastDiceRoll.Formula == "1d20" ? "text-success" : lastDiceRoll.Total == 1 && lastDiceRoll.Formula == "1d20" ? "text-danger" : "")">
+                                @lastDiceRoll.Total
+                            </h3>
+                            <p class="mb-0">@lastDiceRoll.Formula</p>
+                            <small class="text-muted">@lastDiceRoll.IndividualRolls</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Session? session;
+    private bool isLoading = true;
+    private bool isConnected = false;
+    private HubConnection? hubConnection;
+    private ElementReference chatContainer;
+    
+    private List<Message> messages = new();
+    private string currentMessage = string.Empty;
+    private DiceRoll? lastDiceRoll;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSessionAsync();
+        await InitializeSignalRAsync();
+    }
+
+    private async Task LoadSessionAsync()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await SessionService.GetSessionAsync(Id);
+            session = result as Session;
+            
+            if (session is not null)
+            {
+                messages = session.Messages.OrderBy(m => m.Timestamp).ToList();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading session: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task InitializeSignalRAsync()
+    {
+        try
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(Navigation.ToAbsoluteUri("/hubs/game-session"))
+                .WithAutomaticReconnect(new[] { TimeSpan.Zero, TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(10) })
+                .Build();
+
+            hubConnection.On<Message>("ReceiveMessage", message =>
+            {
+                messages.Add(message);
+                InvokeAsync(StateHasChanged);
+            });
+
+            hubConnection.On<DiceRoll>("DiceRolled", roll =>
+            {
+                lastDiceRoll = roll;
+                InvokeAsync(StateHasChanged);
+            });
+
+            hubConnection.Reconnecting += error =>
+            {
+                isConnected = false;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+
+            hubConnection.Reconnected += connectionId =>
+            {
+                isConnected = true;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+
+            hubConnection.Closed += error =>
+            {
+                isConnected = false;
+                InvokeAsync(StateHasChanged);
+                return Task.CompletedTask;
+            };
+
+            await hubConnection.StartAsync();
+            isConnected = true;
+            
+            await hubConnection.InvokeAsync("JoinSession", Id, 1); // Character ID hardcoded to 1
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error connecting to SignalR: {ex.Message}");
+        }
+    }
+
+    private async Task SendMessageAsync()
+    {
+        if (string.IsNullOrWhiteSpace(currentMessage) || hubConnection is null || !isConnected)
+            return;
+
+        try
+        {
+            await hubConnection.InvokeAsync("SendMessage", Id, currentMessage);
+            currentMessage = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending message: {ex.Message}");
+        }
+    }
+
+    private async Task RollDiceAsync(string formula)
+    {
+        if (hubConnection is null || !isConnected)
+            return;
+
+        try
+        {
+            await hubConnection.InvokeAsync("RollDice", Id, formula);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rolling dice: {ex.Message}");
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+        {
+            await SendMessageAsync();
+        }
+    }
+
+    private string GetStateBadgeClass(SessionState state) => state switch
+    {
+        SessionState.Created => "bg-secondary",
+        SessionState.InProgress => "bg-success",
+        SessionState.Paused => "bg-warning",
+        SessionState.Completed => "bg-info",
+        _ => "bg-dark"
+    };
+
+    private string GetRoleName(MessageRole role) => role switch
+    {
+        MessageRole.DungeonMaster => "🎲 Dungeon Master",
+        MessageRole.Player => "⚔️ Player",
+        MessageRole.System => "⚙️ System",
+        _ => "Unknown"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
+    }
+}

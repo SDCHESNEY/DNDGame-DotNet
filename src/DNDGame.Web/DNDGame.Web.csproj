@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DNDGame.Application\DNDGame.Application.csproj" />
+    <ProjectReference Include="..\DNDGame.Core\DNDGame.Core.csproj" />
+    <ProjectReference Include="..\DNDGame.Shared\DNDGame.Shared.csproj" />
+    <ProjectReference Include="..\DNDGame.Infrastructure\DNDGame.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+</Project>

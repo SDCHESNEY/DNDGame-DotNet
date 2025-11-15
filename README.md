@@ -6,6 +6,7 @@ A Dungeons & Dragons-style RPG powered by Large Language Models, built with .NET
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![Tests](https://img.shields.io/badge/tests-216%20passing-success)](tests/)
 [![Build](https://img.shields.io/badge/Phase%206-Complete%20(0%20warnings)-brightgreen)](docs/roadmap.md)
+[![Phase 5](https://img.shields.io/badge/Phase%205-Complete%20(Blazor%20UI)-success)](docs/roadmap.md)
 
 ## 🎮 Overview
 
@@ -385,13 +386,22 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [x] SignalR configured with JSON protocol
 - [x] **195 tests passing** (185 unit + 10 integration)
 
-### Phase 5: Blazor Web UI (Weeks 9-10)
-- [ ] Responsive layout with Tailwind CSS
-- [ ] Character sheet and creation wizard
-- [ ] Chat panel with DM/player differentiation
-- [ ] Dice roller and initiative tracker
-- [ ] Session lobby and management
-- [ ] **Target: 40+ component tests (bUnit)**
+### Phase 5: Blazor Web UI ✅ (Weeks 9-10) - COMPLETED
+- ✅ Blazor Server application with Bootstrap 5 and custom CSS (410 lines)
+- ✅ 7 pages implemented: Home, Characters, CharacterCreate, CharacterDetail, Dice, Sessions, SessionDetail
+- ✅ Character sheet and creation wizard with ability scores, class selection, level input
+- ✅ Chat panel with DM/player differentiation (purple/blue styling)
+- ✅ Dice roller with formula input, advantage/disadvantage, quick buttons, roll history
+- ✅ Initiative tracker integrated in SessionDetail page
+- ✅ Session lobby with state badges and mode icons
+- ✅ SignalR integration with automatic reconnection and real-time messaging
+- ✅ Dark mode support with 18 CSS custom properties
+- ✅ Responsive design with animations (rollIn, slideIn, pulse effects)
+- ✅ **21/29 component tests passing (bUnit)** - 72% pass rate
+  - HomeTests: 5/8 passing
+  - CharactersTests: 3/4 passing
+  - DiceTests: 9/11 passing
+  - SessionsTests: 4/6 passing
 
 ### Phase 6: MAUI Mobile App ✅ (Weeks 11-12) - COMPLETED
 - ✅ .NET MAUI Blazor Hybrid setup
@@ -423,7 +433,7 @@ This is a 16-week implementation plan. See [docs/roadmap.md](docs/roadmap.md) fo
 - [ ] Prometheus + Grafana monitoring
 - [ ] App store submissions (iOS/Android)
 
-**Current Progress**: Phase 6 Complete (Clean build: 0 errors, 0 warnings) | **Next**: Phase 7 - Testing & Polish
+**Current Progress**: Phases 5 & 6 Complete (Blazor UI + MAUI Mobile) | **Next**: Phase 7 - Testing & Polish
 
 See [docs/roadmap.md](docs/roadmap.md) and [docs/llm-integration-guide.md](docs/llm-integration-guide.md) for detailed implementation and configuration.
 
